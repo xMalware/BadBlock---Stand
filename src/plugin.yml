@@ -1,0 +1,9 @@
+name: BadblockStand
+main: com.lelann.stand.StandPlugin
+version: 1.0.0
+authors: ['LeLanN']
+depend: ['BadblockFactions']
+commands:
+    stand:
+        description: Commande principale de Badblock Stand.
+        usage: /stand <param>
