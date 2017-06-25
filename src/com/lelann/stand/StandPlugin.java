@@ -160,7 +160,7 @@ public class StandPlugin extends JavaPlugin {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+		//TEST COMMIT
 		System.out.println("Finished loading stands");
 
 		new StandConfiguration(getConfig());
