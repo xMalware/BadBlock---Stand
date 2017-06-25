@@ -27,14 +27,18 @@ public class CategoryPNJManager {
 			add(pnj);
 		}
 		
-		loadCategoryGuis(pnjs);
+		loadCategoryGuis();
+	}
+	
+	public void reload() {
+		loadCategoryGuis();
 	}
 	
 	/**
 	 * Charge les inventaires
 	 */
-	private void loadCategoryGuis(List<CategoryPNJ> pnjs) {
-		for(final CategoryPNJ pnj : pnjs) {
+	private void loadCategoryGuis() {
+		for(final CategoryPNJ pnj : pnjs.values()) {
 			InventoryManager.createCategoryGui(pnj.getGuiTitle(), pnj);
 		}
 	}

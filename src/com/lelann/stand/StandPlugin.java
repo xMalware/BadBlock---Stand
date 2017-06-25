@@ -1,6 +1,7 @@
 package com.lelann.stand;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -118,6 +119,11 @@ public class StandPlugin extends JavaPlugin {
 
 		if(config.getConfigurationSection("Pnjs") == null){
 			config.createSection("Pnjs");
+			try {
+				config.save(pnj);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		
 		manager = new CategoryPNJManager(Categories.loadCategories(pnj));

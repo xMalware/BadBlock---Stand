@@ -28,16 +28,23 @@ public class CategoryGUI extends AbstractInventory {
 
 	private void setup() {
 		setBottomBar(true, true);
-		
-		for(ItemStack item : from.getItems()) {
-			ItemAction openVendorsForItem = new ItemAction() {
-				@Override
-				public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
-					Tops.openTopGui(p, clicked);
+		if(from.getItems().length > 0) {
+			int slot = 0;
+			for(ItemStack item : from.getItems()) {
+				if(item == null || item.getType() == Material.AIR) {
+					slot++;
+					continue;
 				}
-			};
-			ItemStack display = ItemUtils.create(new String[] {"", "&a> &7Voir les meilleurs prix de vente"}, item);
-			addClickable(display, openVendorsForItem);
+				ItemAction openVendorsForItem = new ItemAction() {
+					@Override
+					public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
+						Tops.openTopGui(p, clicked);
+					}
+				};
+				ItemStack display = ItemUtils.create(new String[] {"", "&a> &7Voir les meilleurs prix de vente"}, item);
+				addClickable(display, slot, openVendorsForItem);
+				slot++;
+			}
 		}
 	}
 	
@@ -61,12 +68,22 @@ public class CategoryGUI extends AbstractInventory {
 		editing = false;
 		setActive(true);
 		
-		from.setItems(getInventory().getContents());
+		from.setItems(getContents());
 		
 		StandPlugin.get().getManager().savePnjs();
-		p.sendMessage("&aPNJ modifié !");
+		p.sendMessage("PNJ modifié !");
+		
+		resetBottomBar(true, true);
 		
 		p.closeInventory();
+	}
+	
+	public ItemStack[] getContents() {
+		ItemStack[] stacks = new ItemStack[9 * 5];
+		for(int slot = 0; slot < getSize()-10; slot++) {
+			stacks[slot] = getInventory().getItem(slot);
+		}
+		return stacks;
 	}
 
 	public void openEdit(Player player) {
@@ -82,6 +99,7 @@ public class CategoryGUI extends AbstractInventory {
 				saveInventory(p);
 			}
 		}));
+		show(player);
 	}
 
 }

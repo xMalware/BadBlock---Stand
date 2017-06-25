@@ -27,6 +27,16 @@ public class Categories {
 		
 		String section = "Pnjs";
 		ConfigurationSection cs = configuration.getConfigurationSection(section);
+		
+		if(cs == null) {
+			cs = configuration.createSection(section);
+			return new ArrayList<>();
+			/*cs.set("Blocs.Name", "&b> &7Des blocs &b<");
+			cs.set("Blocs.InventoryTitle", "&7Checkez les blocs !");
+			cs.set("Blocs.Location", null);
+			cs.set("Blocs.Items", Arrays.asList("STONE:0"));*/
+		}
+		
 		for(String id : cs.getKeys(false)) {
 			ConfigurationSection current = cs.getConfigurationSection(id);
 			String name = current.getString("Name");
@@ -40,14 +50,15 @@ public class Categories {
 	}
 	
 	public static void saveCategory(String identifier, String name, String title, Location loc, ItemStack[] items) {
+		configuration.set("Pnjs", null);
 		configuration.set("Pnjs." + identifier, null);
 		String path = "Pnjs." + identifier;
-		ConfigurationSection current = configuration.getConfigurationSection(path);
+		//ConfigurationSection current = configuration.getConfigurationSection(path);
 		
 		configuration.set(path + ".Name", name);
 		configuration.set(path + ".InventoryTitle", title);
-		ConfigUtils.itemsToConfig(current, items);
-		ConfigUtils.locationToConfig(current, loc);
+		ConfigUtils.itemsToConfig(configuration, path, items);
+		ConfigUtils.locationToConfig(configuration, path, loc);
 		
 		save();
 		reloadPnjs();
@@ -59,6 +70,7 @@ public class Categories {
 	
 	private static void save() {
 		try {
+			System.out.println("saving config");
 			configuration.save(config);
 		} catch (IOException e) {
 			e.printStackTrace();

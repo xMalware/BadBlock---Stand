@@ -15,6 +15,7 @@ import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.lelann.factions.database.Callback;
 import com.lelann.factions.utils.ChatUtils;
 import com.lelann.factions.utils.ItemUtils;
@@ -26,6 +27,8 @@ import com.lelann.stand.inventories.abstracts.InventoryManager;
 import com.lelann.stand.inventories.items.MenuItem;
 import com.lelann.stand.objects.StandOffer;
 import com.lelann.stand.objects.StandPlayer;
+
+import net.minecraft.server.v1_8_R3.IAsyncTaskHandler;
 
 public class TopGUI extends AbstractInventory {
 
@@ -191,7 +194,7 @@ public class TopGUI extends AbstractInventory {
 			public void call(Throwable t, List<StandOffer> result) {
 				if(t != null ) { t.printStackTrace(); return; } 
 				
-				if(result.size() == 0) { hasOffers = false; return; }
+				if(result.size() == 0) { hasOffers = false; callBack.run(); return; }
 				
 				for(int index = 0; index < result.size(); index++) {
 					StandOffer offer = result.get(index);
@@ -245,7 +248,7 @@ public class TopGUI extends AbstractInventory {
 			public void call(Throwable t, List<StandOffer> result) {
 				if(t != null ) { t.printStackTrace(); hasOffers = false; return; } 
 				
-				if(result.size() == 0) { hasOffers = false; return; }
+				if(result.size() == 0) { hasOffers = false; callBack.run(); return; }
 				
 				for(int index = 0; index < result.size(); index++) {
 					StandOffer offer = result.get(index);
@@ -286,6 +289,8 @@ public class TopGUI extends AbstractInventory {
 					item.print(TopGUI.this, getPrintSlot(index, true));
 				}
 				
+				System.out.println("calling cb ! Finished loading tops !");
+				
 				callBack.run();
 			}
 		});
@@ -308,15 +313,20 @@ public class TopGUI extends AbstractInventory {
 		
 	}
 	
-	@Override
-	public void show(Player p) {
+	public void showBefore(Player p) {
 		InventoryManager.getLoadingGui().show(p);
 		loadTops(new Runnable() {
 			@Override
 			public void run() {
-				if(hasOffers)
-					TopGUI.super.show(p);
-				else { 
+				
+				System.out.println("Calling callback !!!!!!");
+				
+				if(hasOffers) {
+					//WTF ERROR HERE: CancelledPacketHandleException
+					System.out.println("OPENING TOP GUI");
+					setPlayer(p);
+					p.openInventory(getInventory());
+				} else { 
 					p.closeInventory();
 					ChatUtils.sendMessage(p, "&cAucune offre n'a été trouvée pour cet item :c");
 				}

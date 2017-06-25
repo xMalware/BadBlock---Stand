@@ -59,6 +59,8 @@ public class Pnj extends AbstractCommand {
 			}
 			
 			StandPlugin.get().getManager().add(new CategoryPNJ(identifier, "Mon beau pnj", "Titre de l'inventaire", player.getLocation(), Arrays.asList(new ItemStack[9*5])));
+			StandPlugin.get().getManager().reload();
+			StandPlugin.get().getManager().savePnjs();
 			
 		} else if(args[0].equalsIgnoreCase("settitle")){
 			//StandTopPNJManager.getInstance().add(new StandTopPNJ(player.getLocation()));

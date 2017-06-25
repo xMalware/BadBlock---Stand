@@ -1,8 +1,5 @@
 package com.lelann.stand.inventories.abstracts;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -16,7 +13,7 @@ public class Tops {
 	 * @param item L'item pour lequel on recherche le top
 	 */
 	public static void openTopGui(Player p, ItemStack item) {
-		getTopGui(item).show(p);
+		getTopGui(item).showBefore(p);
 	}
 	
 	private static TopGUI getTopGui(ItemStack item) {

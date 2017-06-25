@@ -1,10 +1,12 @@
 package com.lelann.stand.inventories.abstracts;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -56,12 +58,21 @@ public abstract class AbstractInventory {
 		this.title = title;
 		this.size = 54;
 		defaultSeparator();
+		InventoryManager.clickables.put(this, new ArrayList<>());
+		build();
 	}
 	
 	public AbstractInventory(String title, int size) {
 		this.title = title;
 		this.size = size;
 		defaultSeparator();
+		InventoryManager.clickables.put(this, new ArrayList<>());
+		build();
+	}
+	
+	protected void build() {
+		this.gui = Bukkit.createInventory(null, this.size, ChatUtils.colorReplace(this.title));
+		InventoryManager.addGui(this);
 	}
 	
 	public void defaultSeparator() {
@@ -130,6 +141,10 @@ public abstract class AbstractInventory {
 		gui.setItem(slot, item.getItem());
 	}
 	
+	public void removeClickable(ClickableItem item) {
+		InventoryManager.unregisterItem(this, item);
+	}
+	
 	/**
 	 * Récupération de la barre de navigation du bas
 	 * @param chest Si il peut y avoir un chest (1er item)
@@ -160,23 +175,32 @@ public abstract class AbstractInventory {
 				addSeparator(startSlot+slot);
 			} else if(slot == 8 && !retour) {
 				addSeparator(startSlot+slot);
-			} else {
+			} else if(slot > 0 && slot < 8) {
 				addSeparator(startSlot+slot);
 			}
 		}
 	}
 	
 	public void editBottomBar(int slot, ClickableItem edited) {
+		slot = (size-9) + slot;
 		List<ClickableItem> list = InventoryManager.clickables.get(this);
 		for(int pos = 0; pos < list.size(); pos++) {
 			for(int s = 0; s < size; s++) {
-				if(gui.getItem(s).equals(list.get(pos).getItem())) {
+				if(gui.getItem(s) != null && gui.getItem(s).isSimilar(list.get(pos).getItem())) {
 					list.set(pos, edited);
 					gui.setItem(slot, edited.getItem());
 					break;
 				}
 			}
 		}
+	}
+	
+	public void resetBottomBar(boolean chest, boolean retour) {
+		for(int slot = 0; slot < 8; slot++) {
+			slot = size-9+slot;
+			removeClickable(getClickable(slot));
+		}
+		setBottomBar(chest, retour);
 	}
 	
 	public ClickableItem getItem(ItemStack item) {

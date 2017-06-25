@@ -39,7 +39,7 @@ public class InventoryListener extends StandObject implements Listener {
 				|| player.getAction() == StandAction.A_WAITING_DEL_PNJ
 				|| player.getAction() == StandAction.WAITING_KICK) return;
 		if(e.getClickedInventory() instanceof PlayerInventory) {
-			e.setCancelled(true);
+			//e.setCancelled(true);
 			return;
 		}
 

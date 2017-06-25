@@ -24,6 +24,10 @@ public class InventoryManager {
 	@Getter
 	private static LoadingGUI loadingGui;
 	
+	static {
+		createLoadingGui();
+	}
+	
 	public static void createLoadingGui() {
 		if(loadingGui != null) return;
 		else {
@@ -43,6 +47,12 @@ public class InventoryManager {
 		ClickableItem clickable = new ClickableItem(item, action);
 		List<ClickableItem> items = clickables.get(gui);
 		items.add(clickable);
+		clickables.put(gui, items);
+	}
+
+	public static void unregisterItem(AbstractInventory gui, ClickableItem item) {
+		List<ClickableItem> items = clickables.get(gui);
+		items.remove(item);
 		clickables.put(gui, items);
 	}
 	
