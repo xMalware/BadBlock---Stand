@@ -17,6 +17,7 @@ public class MenuItem {
 				int currentSlot = startSlot + index + (height*8);
 				//gui.getInventory().setItem(currentSlot, items[height][index]);
 				ClickableItem current = items[height][index];
+				current.setSlot(currentSlot);
 				gui.addClickable(currentSlot, current);
 			}
 		}

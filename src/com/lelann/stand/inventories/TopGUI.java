@@ -1,13 +1,11 @@
 package com.lelann.stand.inventories;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
@@ -15,7 +13,8 @@ import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import com.lelann.factions.Main;
+import com.lelann.factions.api.FactionPlayer;
 import com.lelann.factions.database.Callback;
 import com.lelann.factions.utils.ChatUtils;
 import com.lelann.factions.utils.ItemUtils;
@@ -28,8 +27,6 @@ import com.lelann.stand.inventories.items.MenuItem;
 import com.lelann.stand.objects.StandOffer;
 import com.lelann.stand.objects.StandPlayer;
 
-import net.minecraft.server.v1_8_R3.IAsyncTaskHandler;
-
 public class TopGUI extends AbstractInventory {
 
 	private ItemStack item;
@@ -39,8 +36,9 @@ public class TopGUI extends AbstractInventory {
 	
 	private int totalMoney = 0;
 	private int totalStack = 0;
-	private List<StandOffer> toBuy = new ArrayList<>();
+
 	private Map<StandOffer, Integer> amounts = new HashMap<>();
+	private Map<Integer, StandOffer> offersBySlots = new HashMap<>();
 	
 	public TopGUI(String title, ItemStack item) {
 		super(title);
@@ -54,7 +52,10 @@ public class TopGUI extends AbstractInventory {
 		ClickableItem book = new ClickableItem(ItemUtils.create("&aValider votre achat", new String[] {"&cVous devez au moins avoir un item dans votre panier", "&cpour finaliser votre achat !"}, Material.BOOK), new ItemAction() {
 			
 			@Override
-			public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {	
+			public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
+				
+				System.out.println("OMG, CLICKED BOOK");
+				
 				if(totalStack > 0) {
 					buySelectedItems();
 				} else {
@@ -66,11 +67,11 @@ public class TopGUI extends AbstractInventory {
 	}
 	
 	public void updateBuyItem(ItemStack newItem) {
-		editBottomBar(4, getClickable(4).update(newItem));
+		editBottomBar(4, getBarClickable(4).update(newItem));
 	}
 	
 	public void updateBuyItem(String name, String[] description) {
-		editBottomBar(4, getClickable(4).update(ItemUtils.create(getInventory().getItem(4), name, description)));
+		editBottomBar(4, getBarClickable(4).update(ItemUtils.create(getInventory().getItem(4), name, description)));
 	}
 	
 	public void updateBuyItem(ClickableItem item) {
@@ -82,20 +83,23 @@ public class TopGUI extends AbstractInventory {
 		ItemStack newStack = null;
 		
 		if(totalStack > 0) {
-			newStack = ItemUtils.create("&aValider votre achat", new String[] {"&7Vous êtes sur le point d'acheter&b" + totalStack + "&7 items",
-				"&7Argent:      &b" + player.getMoney() + "$",
-				"&7Coût:        &b" + totalMoney + "$",
-				"&7Après achat: &b" + (player.getMoney()-totalMoney),
+			newStack = ItemUtils.create("&aValider votre achat", new String[] {"&7Vous êtes sur le point d'acheter&b " + totalStack + "&7 items",
+				"&7Argent: &b" + player.getMoney() + "$",
+				"&7Coût: &b" + totalMoney + "$",
+				"&7Après achat: &b" + (player.getMoney()-totalMoney) + "$",
 				"",
 				"&7Cliquez pour acheter !"}, Material.BOOK);
 		} else {
 			newStack = ItemUtils.create("&aValider votre achat", new String[] {"&cVous devez au moins avoir un item dans votre panier", "&cpour finaliser votre achat !"}, Material.BOOK);
 		}
-		editBottomBar(4, getClickable(4).update(newStack));
+		//editBottomBar(4, getBarClickable(4).update(newStack));
+		getInventory().setItem(getSize() - 9 + 4, newStack);
+		System.out.println("total stack: " + totalStack);
+		update();
 	}
 	
 	private void buySelectedItems() {
-		if(toBuy.isEmpty()) {
+		if(amounts.isEmpty()) {
 			ChatUtils.sendMessage(getPlayer(), "&cVous devez séléctionner au moins un item à acheter !");
 			return;
 		}
@@ -116,10 +120,16 @@ public class TopGUI extends AbstractInventory {
 			
 			if(amounts.get(buying) < 0) continue;
 			
+			if(buying.getOwner().equals(getPlayer().getUniqueId())) {
+				player.sendMessage("&cT'es un marrant toi, en fait.");
+				continue;
+			}
+			
 			StandPlayer owner = buying.getPlayer(buying.getOwner());
+			FactionPlayer p = Main.getInstance().getPlayersManager().getPlayer(buying.getOwner());
 			
 			int amount = amounts.get(buying);
-			int priceForPlayer = (int) Math.floor((amount * buying.getPrice()) * TAXE);
+			int priceForPlayer = (int) (buying.getPrice() * amount + Math.floor((amount * buying.getPrice()) * TAXE));
 			int priceForOwner = amount * buying.getPrice();
 			
 			//removing money and adding items
@@ -133,13 +143,14 @@ public class TopGUI extends AbstractInventory {
 			}
 			
 			if(owner.getPlayer() != null){
-				owner.sendMessage("&a[Stand] Vous avez vendu " + amount + " " + buying.getType().name().toLowerCase().replace("_", " ") + " à " + player.getPlayer().getDisplayName() + " &apour " + priceForOwner + "$");
+				owner.sendMessage("&b[&7Stand&b]&7 Vous venez de vendre &a" + amount + " " + buying.getName() + "&7 à &a" + player.getPlayer().getName() + "&7 pour &a" + priceForOwner + "$&7 !");
 			}
 			
 			ItemStack item = buying.getItem();
 			item.setAmount(amount);
 			
 			player.getPlayer().getInventory().addItem(item);
+			player.sendMessage("&b[&7Stand&b]&7 Vous venez d'acheter &a" + amount + " " + buying.getName() + "&7 à &a" + p.getLastUsername() + "&7 pour &a" + priceForPlayer + "$&7 !");
 			
 			Requests.savePlayer(owner);
 			//getPlayer().closeInventory();
@@ -149,46 +160,93 @@ public class TopGUI extends AbstractInventory {
 		
 	}
 	
-	private void addItemToCart(int slot, StandOffer offer) {
-		if(getInventory().getItem(slot).getAmount() < offer.getAmount()) {
-			totalStack++;
-			totalMoney+=offer.getPrice() + Math.floor(offer.getPrice() * TAXE);
-			amounts.put(offer, getInventory().getItem(slot).getAmount());
-			indicator(slot, true);
-			updateBuyItem();
+	private void addItemToCart(int slot) {
+		
+		StandOffer offer = offersBySlots.get(slot);
+		
+		if(offer == null) {
+			System.out.println("OFFER IS NULL RETURNING");
+			return;
 		}
+		System.out.println("current amount : " + getInventory().getItem(slot).getAmount() + " slot=" + slot + ", type=" + offer.getItem().getType() + ", offer: " + offer.getAmount() + ", owner: " + offer.getOwner());
+		if(getInventory().getItem(slot).getAmount() < offer.getAmount() || getInventory().getItem(slot).getDurability() == 14) {
+			totalStack++;
+			totalMoney += offer.getPrice() + Math.floor(offer.getPrice() * TAXE);
+			indicator(slot, true);
+			amounts.put(offer, getInventory().getItem(slot).getAmount());
+			updateBuyItem();
+			System.out.println("it's ok");
+		} else {
+			System.out.println("cannot add to cart !");
+		}
+		update();
 	}
 	
-	private void removeItemFromCart(int slot, StandOffer offer) {
-		if(getInventory().getItem(slot).getAmount() > 0) {
+	private void removeItemFromCart(int slot) {
+		
+		StandOffer offer = offersBySlots.get(slot);
+		
+		if(getInventory().getItem(slot).getAmount() > 1 || getInventory().getItem(slot).getDurability() == 13 && totalStack > 0) {
 			totalStack--;
 			totalMoney-=offer.getPrice() + Math.floor(offer.getPrice() * TAXE);
+			indicator(slot, false);
 			if(totalStack <= 0) {
 				amounts.remove(offer);
 			} else {
 				amounts.put(offer, getInventory().getItem(slot).getAmount());
 			}
-			indicator(slot, false);
 			updateBuyItem();
+		} else {
+			System.out.println("cannot remove :x");
 		}
+		update();
 	}
 	
 	private void indicator(int slot, boolean increment) {
+		System.out.println("updating item at slot " + slot + " !");
 		ItemStack stack = getInventory().getItem(slot);
-		if(increment)
-			stack.setAmount(stack.getAmount()+1);
-		else if(!increment && stack.getAmount() > 0)
-			stack.setAmount(stack.getAmount()-1);
+		System.out.println("before: amount: " + stack.getAmount() + ", data: " + stack.getDurability());
 		
-		if(stack.getAmount() > 0) {
+		if(increment) {
+			if(stack.getDurability() == 13) {
+				stack.setAmount(stack.getAmount()+1);
+			} else {
+				stack.setDurability((short) 13);
+			}
+		} else if(!increment && stack.getAmount() > 1) {
+			stack.setAmount(stack.getAmount()-1);
+		} else {
+			if(!increment && stack.getDurability() == 13) {
+				stack.setDurability((short) 14);
+			}
+		}
+		
+		/*if(stack.getAmount() > 1) {
 			stack.setDurability((short) 13);
 		} else {
 			stack.setDurability((short) 14);
-		}
+		}*/
+		System.out.println("after: amount: " + stack.getAmount() + ", data: " + stack.getDurability());
+		//getInventory().setItem(slot, null);
 		getInventory().setItem(slot, stack);
+		update();
 	}
 	
-	public void loadTops(Runnable callBack) {
+	private boolean found = false;
+	
+	public void loadTops(Runnable callBack, Runnable cbTimeout, int timeout) {
+		
+		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(StandPlugin.get(), new Runnable() {
+			
+			@Override
+			public void run() {
+				if(!found) {
+					cbTimeout.run();
+				}
+				
+			}
+		}, timeout * 20L);
+		
 		Requests.getTop(item, 4, true, new Callback<List<StandOffer>>() {
 			
 			@Override
@@ -197,12 +255,24 @@ public class TopGUI extends AbstractInventory {
 				
 				if(result.size() == 0) { hasOffers = false; callBack.run(); return; }
 				
+				int printIndex = 0;
+				
 				for(int index = 0; index < result.size(); index++) {
 					StandOffer offer = result.get(index);
-					StandPlayer owner = StandPlugin.get().getPlayer(offer.getOwner());
-					ItemStack head = ItemUtils.createHead(offer.getOwner());
+					FactionPlayer owner = Main.getInstance().getPlayersManager().getPlayer(offer.getOwner());
+					
+					String name = "???";
+					
+					if(owner != null)
+						name = owner.getLastUsername();
+					else {
+						printIndex--;
+						continue;
+					}
+					
+					ItemStack head = ItemUtils.createHead("&7Stand: " + StandPlugin.get().getPlayer(offer.getOwner()).getStandName(), name);
 					ItemStack addToCart = ItemUtils.create("&aAjouter&7 ou&c retirer", new String[] {"", "&7> &bClic gauche&7 pour ajouter une unité", "&7> &bClic droit&7 pour retirer une unité"}, Material.STAINED_GLASS_PANE, 14);
-					ItemStack concerned = ItemUtils.create("&7Vendeur: &b" + owner.getPlayerName(), new String[] {"&7Prix: &b" + offer.getPrice() + "$", "&7Taxe: &b" + Math.floor((offer.getPrice() * 0.10)) + "$"}, offer.getType(), offer.getAmount(), offer.getData());
+					ItemStack concerned = ItemUtils.create("&7Vendeur: &b" + name, new String[] {"&7Prix: &b" + offer.getPrice() + "$", "&7Taxe: &b" + Math.floor((offer.getPrice() * 0.10)) + "$"}, offer.getType(), offer.getAmount(), offer.getData());
 					
 					ClickableItem clickHead = new ClickableItem(head, new ItemAction() {
 						
@@ -216,11 +286,12 @@ public class TopGUI extends AbstractInventory {
 					ClickableItem clickAddToCart = new ClickableItem(addToCart, new ItemAction() {
 						
 						@Override
-						public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {	
+						public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
+							System.out.println("CLCIKED ADD/REMOVE TO CART !!!");
 							if(action == InventoryAction.PICKUP_HALF) { //Clic droit
-								removeItemFromCart(slot, offer);
+								removeItemFromCart(slot);
 							} else {
-								addItemToCart(slot, offer);
+								addItemToCart(slot);
 							}
 						}
 					});
@@ -233,7 +304,12 @@ public class TopGUI extends AbstractInventory {
 					menu[0][2] = block;
 					
 					MenuItem item = new MenuItem(menu);
-					item.print(TopGUI.this, getPrintSlot(index, true));
+					int slot = getPrintSlot(printIndex, true);
+					item.print(TopGUI.this, slot);
+					
+					printIndex++;
+					
+					offersBySlots.put(slot+1, offer);
 				}
 				
 				second(callBack);
@@ -247,16 +323,27 @@ public class TopGUI extends AbstractInventory {
 			
 			@Override
 			public void call(Throwable t, List<StandOffer> result) {
-				if(t != null ) { t.printStackTrace(); hasOffers = false; return; } 
+				if(t != null || result == null) { t.printStackTrace(); hasOffers = false; return; } 
 				
 				if(result.size() == 0) { hasOffers = false; callBack.run(); return; }
 				
+				int printIndex = 0;
 				for(int index = 0; index < result.size(); index++) {
 					StandOffer offer = result.get(index);
-					StandPlayer owner = StandPlugin.get().getPlayer(offer.getOwner());
-					ItemStack head = ItemUtils.createHead(offer.getOwner());
+					FactionPlayer owner = Main.getInstance().getPlayersManager().getPlayer(offer.getOwner());
+					
+					String name = "???";
+					
+					if(owner != null)
+						name = owner.getLastUsername();
+					else {
+						printIndex--;
+						continue;
+					}
+					
+					ItemStack head = ItemUtils.createHead("&7Stand: " + StandPlugin.get().getPlayer(offer.getOwner()).getStandName(), name);
 					ItemStack addToCart = ItemUtils.create("&aAjouter&7 ou&c retirer", new String[] {"", "&7> &bClic gauche&7 pour ajouter une unité", "&7> &bClic droit&7 pour retirer une unité"}, Material.STAINED_GLASS_PANE, 14);
-					ItemStack concerned = ItemUtils.create("&7Vendeur: &b" + owner.getPlayerName(), new String[] {"&7Prix: &b" + offer.getPrice() + "$", "&7Taxe: &b" + Math.floor((offer.getPrice() * 0.10)) + "$"}, offer.getType(), offer.getAmount(), offer.getData());
+					ItemStack concerned = ItemUtils.create("&7Vendeur: &b" + name, new String[] {"&7Prix: &b" + offer.getPrice() + "$", "&7Taxe: &b" + Math.floor((offer.getPrice() * 0.10)) + "$"}, offer.getType(), offer.getAmount(), offer.getData());
 					
 					ClickableItem clickHead = new ClickableItem(head, new ItemAction() {
 						
@@ -264,7 +351,6 @@ public class TopGUI extends AbstractInventory {
 						public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
 							StandPlayer ownerPl = StandPlugin.get().getPlayer(offer.getOwner());
 							ownerPl.openStand(p);
-							System.out.println("OPENING STAND");
 						}
 					});
 					
@@ -273,9 +359,9 @@ public class TopGUI extends AbstractInventory {
 						@Override
 						public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {	
 							if(action == InventoryAction.PICKUP_HALF) { //Clic droit
-								removeItemFromCart(slot, offer);
+								removeItemFromCart(slot);
 							} else {
-								addItemToCart(slot, offer);
+								addItemToCart(slot);
 							}
 						}
 					});
@@ -288,7 +374,12 @@ public class TopGUI extends AbstractInventory {
 					menu[0][2] = block;
 					
 					MenuItem item = new MenuItem(menu);
-					item.print(TopGUI.this, getPrintSlot(index, false));
+					int slot = getPrintSlot(printIndex, false);
+					item.print(TopGUI.this, slot);
+					
+					printIndex++;
+					
+					offersBySlots.put(slot+1, offer);
 				}
 				
 				System.out.println("calling cb ! Finished loading tops !");
@@ -307,33 +398,45 @@ public class TopGUI extends AbstractInventory {
 	@Override
 	public boolean onClick(Player p, ItemStack clicked, ItemStack cursor, int slot, InventoryAction action,
 			ClickType clickType, SlotType slotType) {
+		System.out.println("Clicked !, item: " + clicked + ",,, slot=" + slot);
 		return true;
 	}
 
 	@Override
 	public void onClose(Player p) {
-		
+		InventoryManager.removeGui(this);
 	}
 	
 	public void showBefore(Player p) {
+		setPlayer(p);
+		AbstractInventory before = InventoryManager.getGui(p.getOpenInventory().getTopInventory());
 		InventoryManager.getLoadingGui().show(p);
 		loadTops(new Runnable() {
 			@Override
 			public void run() {
 				
-				System.out.println("Calling callback !!!!!!");
+				found = true;
 				
 				if(hasOffers) {
-					//WTF ERROR HERE: CancelledPacketHandleException
-					System.out.println("OPENING TOP GUI");
-					setPlayer(p);
-					p.openInventory(getInventory());
+					if(before != null) {
+						before.displayGui(TopGUI.this);
+					} else {
+						show(p);
+					}
 				} else { 
 					p.closeInventory();
 					ChatUtils.sendMessage(p, "&cAucune offre n'a été trouvée pour cet item :c");
 				}
 			}
-		});
+		}, new Runnable() {
+			
+			@Override
+			public void run() {
+				ChatUtils.sendMessage(p, "&cLa requête a pris trop de temps.");
+				p.closeInventory();
+				
+			}
+		}, 10);
 	}
 	
 	public boolean give(PlayerInventory inv, ItemStack item){

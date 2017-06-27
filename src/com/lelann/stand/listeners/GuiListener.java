@@ -1,14 +1,10 @@
 package com.lelann.stand.listeners;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.inventory.Inventory;
 
 import com.lelann.stand.abstracts.StandObject;
 import com.lelann.stand.inventories.abstracts.AbstractInventory;
@@ -21,13 +17,10 @@ import com.lelann.stand.inventories.abstracts.InventoryManager;
  *
  */
 public class GuiListener extends StandObject implements Listener {
-
-	private Map<Inventory, AbstractInventory> guisByInvs = new HashMap<>();
 	
 	@EventHandler
 	public void guiClick(InventoryClickEvent e) {
-		System.out.println("Clicked inv !");
-		AbstractInventory gui = getGui(e.getWhoClicked().getOpenInventory().getTopInventory());
+		AbstractInventory gui = InventoryManager.getGui(e.getClickedInventory());
 		if(gui == null) {
 			System.out.println("gui is null");
 			return;
@@ -36,7 +29,9 @@ public class GuiListener extends StandObject implements Listener {
 		boolean cancel = gui.callClickEvent(e);
 		e.setCancelled(cancel);
 		
-		ClickableItem item = gui.getItem(e.getCurrentItem());
+		//System.out.println("èh: " + e.getClickedInventory().getTitle() + ", item: " + e.getCurrentItem());
+		
+		ClickableItem item = gui.getItem(e.getSlot());
 		if(item != null && item.getAction() != null && (gui.isActive() || e.getSlot() >= gui.getSize()-9))
 			item.getAction().run((Player) e.getWhoClicked(), e.getCurrentItem(), e.getSlot(), e.getAction());
 		
@@ -44,23 +39,10 @@ public class GuiListener extends StandObject implements Listener {
 	
 	@EventHandler 
 	public void guiClose(InventoryCloseEvent e) {
-		AbstractInventory gui = getGui(e.getInventory());
+		AbstractInventory gui = InventoryManager.getGui(e.getInventory());
 		if(gui == null) return;
 		
 		gui.callCloseEvent(e);
-	}
-	
-	private AbstractInventory getGui(Inventory inv) {
-		if(guisByInvs.containsKey(inv)) return guisByInvs.get(inv);
-		else {
-			for(AbstractInventory gui : InventoryManager.guis) {
-				if(gui.isSimilar(inv)) {
-					guisByInvs.put(inv, gui);
-					return gui;
-				}
-			}
-			return null;
-		}
 	}
 	
 }

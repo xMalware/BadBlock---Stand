@@ -1,6 +1,5 @@
 package com.lelann.stand.inventories.abstracts;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -47,6 +46,7 @@ public abstract class AbstractInventory {
 	private boolean isActive = true;
 	
 	private Map<ItemStack, ClickableItem> items = new HashMap<>();
+	private Map<Integer, ClickableItem> itemsSlot = new HashMap<>();
 	
 	@Getter@Setter
 	private AbstractInventory back;
@@ -58,7 +58,6 @@ public abstract class AbstractInventory {
 		this.title = title;
 		this.size = 54;
 		defaultSeparator();
-		InventoryManager.clickables.put(this, new ArrayList<>());
 		build();
 	}
 	
@@ -66,7 +65,6 @@ public abstract class AbstractInventory {
 		this.title = title;
 		this.size = size;
 		defaultSeparator();
-		InventoryManager.clickables.put(this, new ArrayList<>());
 		build();
 	}
 	
@@ -88,19 +86,21 @@ public abstract class AbstractInventory {
 	}
 	
 	public void displayGui(AbstractInventory gui) {
-		back = this;
+		gui.back = this;
 		gui.show(player);
 	}
 	
 	public boolean goBack() {
-		if(back != null)
+		if(back != null) {
 			back.show(player);
+			back = null;
+		}
 		else player.closeInventory();
 		return true;
 	}
 	
 	public boolean isSimilar(Inventory inv) {
-		return inv == gui || (size == inv.getSize() && title.equals(inv.getTitle()));
+		return inv == gui || (size == inv.getSize() && ChatUtils.colorDelete(title).equals(ChatUtils.colorDelete(inv.getTitle())));
 	}
 
 	public boolean callClickEvent(InventoryClickEvent e) {
@@ -112,13 +112,10 @@ public abstract class AbstractInventory {
 	}
 	
 	public void addClickable(ItemStack item, int slot, ItemAction action) {
-		InventoryManager.registerItem(this, item, action);
+		ClickableItem it = new ClickableItem(item, action);
+		InventoryManager.registerItem(this, it);
+		itemsSlot.put(slot, it);
 		gui.setItem(slot, item);
-	}
-	
-	public void addClickable(ItemStack item, ItemAction action) {
-		InventoryManager.registerItem(this, item, action);
-		gui.addItem(item);
 	}
 	
 	public void addSeparator(int slot) {
@@ -132,11 +129,14 @@ public abstract class AbstractInventory {
 		meta.setDisplayName(ChatUtils.colorReplace(name));
 		meta.setLore(Arrays.asList(ChatUtils.colorReplace(desc)));
 		item.setItemMeta(meta);
-		InventoryManager.registerItem(this, item, action);
+		ClickableItem clickable = new ClickableItem(item, action);
+		itemsSlot.put(slot, clickable);
+		InventoryManager.registerItem(this, clickable);
 	}
 
 	public void addClickable(int slot, ClickableItem item) {
 		InventoryManager.registerItem(this, item);
+		itemsSlot.put(slot, item);
 		gui.setItem(slot, item.getItem());
 	}
 	
@@ -182,16 +182,22 @@ public abstract class AbstractInventory {
 	
 	public void editBottomBar(int slot, ClickableItem edited) {
 		slot = (size-9) + slot;
-		List<ClickableItem> list = InventoryManager.clickables.get(this);
+		/*List<ClickableItem> list = InventoryManager.clickables.get(this);
 		for(int pos = 0; pos < list.size(); pos++) {
 			for(int s = 0; s < size; s++) {
 				if(gui.getItem(s) != null && gui.getItem(s).isSimilar(list.get(pos).getItem())) {
 					list.set(pos, edited);
 					gui.setItem(slot, edited.getItem());
+					//addClickable(slot, item);
 					break;
 				}
 			}
-		}
+		}*/
+		
+		InventoryManager.unregisterItem(this, getItem(slot));
+		addClickable(slot, edited);
+		
+		//InventoryManager.clickables.put(this, list);
 	}
 	
 	public void resetBottomBar(boolean chest, boolean retour) {
@@ -207,24 +213,43 @@ public abstract class AbstractInventory {
 		else {
 			for(List<ClickableItem> clickables : InventoryManager.clickables.values()) {
 				for(ClickableItem clickable : clickables) {
+					//System.out.println("comparing " + clickable.getItem().getType() + " with " + item.getType() + " ..");
 					if(clickable.getItem().isSimilar(item)) {
 						items.put(item, clickable);
+						System.out.println("founded item clickable");
 						return clickable;
 					}
 				}
 			}
+			System.out.println("not found item clickable :c");
 			return null;
 		}
 	}
 	
+	public ClickableItem getItem(int slot) {
+		return itemsSlot.get(slot);
+	}
+	
 	public ClickableItem getClickable(int slot) {
 		ItemStack stack = getInventory().getItem(slot);
-		if(stack == null) return null;
+		if(stack == null) { System.out.println("item is null at slot " + slot); return null; }
+		return getItem(slot);
+	}
+	
+	public ClickableItem getBarClickable(int slot) {
+		slot = (size-9) + slot;
+		ItemStack stack = getInventory().getItem(slot);
+		if(stack == null) { System.out.println("item is null at slot " + slot); return null; }
 		return getItem(stack);
 	}
 	
 	public Inventory getInventory() {
 		return gui;
+	}
+	
+	public void update() {
+		//System.out.println("updating inv");
+		//Packets.updateInventory(getPlayer(), getInventory());
 	}
 	
 	public abstract boolean onClick(Player p, ItemStack clicked, ItemStack cursor, int slot, InventoryAction action, ClickType clickType, SlotType slotType);

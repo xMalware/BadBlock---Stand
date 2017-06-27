@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import com.lelann.stand.inventories.CategoryGUI;
@@ -16,6 +17,8 @@ import lombok.Getter;
 
 public class InventoryManager {
 
+	private static Map<Inventory, AbstractInventory> guisByInvs = new HashMap<>();
+	
 	public static List<AbstractInventory> guis = new ArrayList<>();
 	public static Map<AbstractInventory, List<ClickableItem>> clickables = new HashMap<>();
 	
@@ -37,10 +40,12 @@ public class InventoryManager {
 	
 	public static void addGui(AbstractInventory gui) {
 		guis.add(gui);
+		clickables.put(gui, new ArrayList<>());
 	}
 	
 	public static void removeGui(AbstractInventory gui) {
 		guis.remove(gui);
+		clickables.remove(gui);
 	}
 
 	public static void registerItem(AbstractInventory gui, ItemStack item, ItemAction action) {
@@ -63,7 +68,10 @@ public class InventoryManager {
 	}
 	
 	public static CategoryGUI createCategoryGui(String title, CategoryPNJ from) {
-		if(categoryGuis.containsKey(from)) return categoryGuis.get(from);
+		if(categoryGuis.containsKey(from)) {
+			categoryGuis.put(from, new CategoryGUI(title, from));
+			return categoryGuis.get(from);
+		}
 		else {
 			CategoryGUI created = new CategoryGUI(title, from);
 			categoryGuis.put(from, created);
@@ -73,6 +81,19 @@ public class InventoryManager {
 
 	public static CategoryGUI getCategoryGui(CategoryPNJ pnj) {
 		return categoryGuis.get(pnj);
+	}
+	
+	public static AbstractInventory getGui(Inventory inv) {
+		if(guisByInvs.containsKey(inv)) return guisByInvs.get(inv);
+		else {
+			for(AbstractInventory gui : InventoryManager.guis) {
+				if(gui.isSimilar(inv)) {
+					guisByInvs.put(inv, gui);
+					return gui;
+				}
+			}
+			return null;
+		}
 	}
 	
 }

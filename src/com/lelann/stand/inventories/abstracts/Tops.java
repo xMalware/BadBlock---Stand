@@ -17,7 +17,7 @@ public class Tops {
 	}
 	
 	private static TopGUI getTopGui(ItemStack item) {
-		return new TopGUI("&7Voir les prix de ventes", item);
+		return new TopGUI("&7Voir les prix de ventes | " + item.getType().name().replace("_", " "), item);
 	}
 	
 }

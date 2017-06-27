@@ -90,6 +90,7 @@ public class Pnj extends AbstractCommand {
 				
 				pnj.setGuiTitle(newName);
 				
+				StandPlugin.get().getManager().reload();
 				StandPlugin.get().getManager().savePnjs();
 			}
 			

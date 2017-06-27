@@ -94,6 +94,15 @@ public class StandOffer extends StandObject {
 	public ItemStack getItem() {
 		return new ItemStack(type, 1, data);
 	}
+
+	public String getName() {
+		String name = "";
+		for(String word : getType().name().split("_")) {
+			name+= word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase() + " ";
+		}
+		name = name.substring(0, name.length()-1);
+		return name;
+	}
 	//	return "DELETE FROM fPlayers WHERE uniqueId='" + uniqueId + "'";
 	//	return "UPDATE fPlayers SET "
 	//			+ "lastUsername='" + lastUsername + "'"
