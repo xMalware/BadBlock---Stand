@@ -13,6 +13,7 @@ import org.bukkit.scheduler.BukkitTask;
 import com.lelann.factions.utils.ItemUtils;
 import com.lelann.stand.StandPlugin;
 import com.lelann.stand.inventories.abstracts.AbstractInventory;
+import com.lelann.stand.inventories.abstracts.InventoryManager;
 
 public class LoadingGUI extends AbstractInventory {
 
@@ -24,6 +25,7 @@ public class LoadingGUI extends AbstractInventory {
 		super(title, 9);
 		setupAnimation();
 		animateLoading();
+		InventoryManager.addGui(this);
 	}
 	
 	private void setupAnimation() {

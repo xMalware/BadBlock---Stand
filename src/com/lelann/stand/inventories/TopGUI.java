@@ -49,6 +49,7 @@ public class TopGUI extends AbstractInventory {
 	}
 
 	public void setup() {
+		InventoryManager.addGui(this);
 		setBottomBar(true, true);
 		ClickableItem book = new ClickableItem(ItemUtils.create("&aValider votre achat", new String[] {"&cVous devez au moins avoir un item dans votre panier", "&cpour finaliser votre achat !"}, Material.BOOK), new ItemAction() {
 			
@@ -198,10 +199,10 @@ public class TopGUI extends AbstractInventory {
 				
 				for(int index = 0; index < result.size(); index++) {
 					StandOffer offer = result.get(index);
-					OfflinePlayer owner = Bukkit.getServer().getOfflinePlayer(offer.getOwner());
+					StandPlayer owner = StandPlugin.get().getPlayer(offer.getOwner());
 					ItemStack head = ItemUtils.createHead(offer.getOwner());
 					ItemStack addToCart = ItemUtils.create("&aAjouter&7 ou&c retirer", new String[] {"", "&7> &bClic gauche&7 pour ajouter une unité", "&7> &bClic droit&7 pour retirer une unité"}, Material.STAINED_GLASS_PANE, 14);
-					ItemStack concerned = ItemUtils.create("&7Vendeur: &b" + owner.getName(), new String[] {"&7Prix: &b" + offer.getPrice() + "$", "&7Taxe: &b" + Math.floor((offer.getPrice() * 0.10)) + "$"}, offer.getType(), offer.getAmount(), offer.getData());
+					ItemStack concerned = ItemUtils.create("&7Vendeur: &b" + owner.getPlayerName(), new String[] {"&7Prix: &b" + offer.getPrice() + "$", "&7Taxe: &b" + Math.floor((offer.getPrice() * 0.10)) + "$"}, offer.getType(), offer.getAmount(), offer.getData());
 					
 					ClickableItem clickHead = new ClickableItem(head, new ItemAction() {
 						
@@ -252,10 +253,10 @@ public class TopGUI extends AbstractInventory {
 				
 				for(int index = 0; index < result.size(); index++) {
 					StandOffer offer = result.get(index);
-					OfflinePlayer owner = Bukkit.getServer().getOfflinePlayer(offer.getOwner());
+					StandPlayer owner = StandPlugin.get().getPlayer(offer.getOwner());
 					ItemStack head = ItemUtils.createHead(offer.getOwner());
 					ItemStack addToCart = ItemUtils.create("&aAjouter&7 ou&c retirer", new String[] {"", "&7> &bClic gauche&7 pour ajouter une unité", "&7> &bClic droit&7 pour retirer une unité"}, Material.STAINED_GLASS_PANE, 14);
-					ItemStack concerned = ItemUtils.create("&7Vendeur: &b" + owner.getName(), new String[] {"&7Prix: &b" + offer.getPrice() + "$", "&7Taxe: &b" + Math.floor((offer.getPrice() * 0.10)) + "$"}, offer.getType(), offer.getAmount(), offer.getData());
+					ItemStack concerned = ItemUtils.create("&7Vendeur: &b" + owner.getPlayerName(), new String[] {"&7Prix: &b" + offer.getPrice() + "$", "&7Taxe: &b" + Math.floor((offer.getPrice() * 0.10)) + "$"}, offer.getType(), offer.getAmount(), offer.getData());
 					
 					ClickableItem clickHead = new ClickableItem(head, new ItemAction() {
 						
@@ -263,6 +264,7 @@ public class TopGUI extends AbstractInventory {
 						public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
 							StandPlayer ownerPl = StandPlugin.get().getPlayer(offer.getOwner());
 							ownerPl.openStand(p);
+							System.out.println("OPENING STAND");
 						}
 					});
 					
@@ -286,12 +288,12 @@ public class TopGUI extends AbstractInventory {
 					menu[0][2] = block;
 					
 					MenuItem item = new MenuItem(menu);
-					item.print(TopGUI.this, getPrintSlot(index, true));
+					item.print(TopGUI.this, getPrintSlot(index, false));
 				}
 				
 				System.out.println("calling cb ! Finished loading tops !");
 				
-				callBack.run();
+				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(StandPlugin.get(), callBack, 1L);
 			}
 		});
 	}

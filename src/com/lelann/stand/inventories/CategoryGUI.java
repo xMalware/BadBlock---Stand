@@ -12,6 +12,7 @@ import com.lelann.factions.utils.ItemUtils;
 import com.lelann.stand.StandPlugin;
 import com.lelann.stand.inventories.abstracts.AbstractInventory;
 import com.lelann.stand.inventories.abstracts.ClickableItem;
+import com.lelann.stand.inventories.abstracts.InventoryManager;
 import com.lelann.stand.inventories.abstracts.Tops;
 import com.lelann.stand.objects.CategoryPNJ;
 
@@ -27,6 +28,7 @@ public class CategoryGUI extends AbstractInventory {
 	}
 
 	private void setup() {
+		InventoryManager.addGui(this);
 		setBottomBar(true, true);
 		if(from.getItems().length > 0) {
 			int slot = 0;

@@ -211,14 +211,14 @@ public class StandPlayer extends StandObject {
 			ChatUtils.sendMessage(to, "&cCe joueur n'a aucune offre à vendre."); return;
 		}
 		
-		if(size > 45) {
+		/*if(size > 45) {
 			//Plus de 6 lignes
-			ChatUtils.sendMessage(to, "&cLe stand de ce joueur n'est pas disponible");
-		}
+			ChatUtils.sendMessage(to, "&cLe stand de ce joueur n'est pas disponible"); return;
+		}*/
 		
 		
 		
-		/*boolean canModify = uniqueId.equals(to.getUniqueId()) || to.hasPermission("stand.admin.modify");
+		boolean canModify = uniqueId.equals(to.getUniqueId()) || to.hasPermission("stand.admin.modify");
 		
 		Inventory inv = Bukkit.createInventory(null, size, ChatUtils.colorReplace(getStandName()));
 		for(int i=0;i<getOffers().size();i++){
@@ -230,10 +230,10 @@ public class StandPlayer extends StandObject {
 		
 		StandPlayer player = getPlayer(to);
 		
-		to.openInventory(inv);*/
+		to.openInventory(inv);
 		
-		/*player.setAction(StandAction.LOOKING_STAND);
-		player.setActionCache(this);*/
+		player.setAction(StandAction.LOOKING_STAND);
+		player.setActionCache(this);
 	}
 	
 	public void buyOffer(StandPlayer to, StandOffer offer){

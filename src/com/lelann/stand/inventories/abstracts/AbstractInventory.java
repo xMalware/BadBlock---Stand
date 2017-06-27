@@ -72,7 +72,6 @@ public abstract class AbstractInventory {
 	
 	protected void build() {
 		this.gui = Bukkit.createInventory(null, this.size, ChatUtils.colorReplace(this.title));
-		InventoryManager.addGui(this);
 	}
 	
 	public void defaultSeparator() {
@@ -101,7 +100,7 @@ public abstract class AbstractInventory {
 	}
 	
 	public boolean isSimilar(Inventory inv) {
-		return inv == gui || size == inv.getSize() && title.equals(inv.getTitle());
+		return inv == gui || (size == inv.getSize() && title.equals(inv.getTitle()));
 	}
 
 	public boolean callClickEvent(InventoryClickEvent e) {

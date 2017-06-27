@@ -172,7 +172,7 @@ public class StandPlugin extends JavaPlugin {
 		new StandConfiguration(getConfig());
 		saveConfig();
 
-		getServer().getPluginManager().registerEvents(new InventoryListener(), this);
+		//getServer().getPluginManager().registerEvents(new InventoryListener(), this);
 		getServer().getPluginManager().registerEvents(new GuiListener(), this);
 		getServer().getPluginManager().registerEvents(new CategoryPNJListener(), this);
 		getServer().getPluginManager().registerEvents(new StandListener(players), this);
