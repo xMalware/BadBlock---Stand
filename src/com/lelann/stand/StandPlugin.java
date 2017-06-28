@@ -29,7 +29,6 @@ import com.lelann.stand.listeners.CategoryPNJListener;
 import com.lelann.stand.listeners.CategoryPNJManager;
 import com.lelann.stand.listeners.GeneralListener;
 import com.lelann.stand.listeners.GuiListener;
-import com.lelann.stand.listeners.InventoryListener;
 import com.lelann.stand.listeners.StandListener;
 import com.lelann.stand.objects.StandOffer;
 import com.lelann.stand.objects.StandPlayer;

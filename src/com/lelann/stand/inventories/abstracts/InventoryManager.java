@@ -61,6 +61,10 @@ public class InventoryManager {
 		clickables.put(gui, items);
 	}
 	
+	public static void unregisterItems(AbstractInventory gui) {
+		clickables.remove(gui);
+	}
+	
 	public static void registerItem(AbstractInventory gui, ClickableItem item) {
 		List<ClickableItem> items = clickables.get(gui);
 		items.add(item);
@@ -69,6 +73,7 @@ public class InventoryManager {
 	
 	public static CategoryGUI createCategoryGui(String title, CategoryPNJ from) {
 		if(categoryGuis.containsKey(from)) {
+			categoryGuis.get(from).resetAll();
 			categoryGuis.put(from, new CategoryGUI(title, from));
 			return categoryGuis.get(from);
 		}

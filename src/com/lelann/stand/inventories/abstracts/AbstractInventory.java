@@ -20,6 +20,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import com.lelann.factions.utils.ChatUtils;
 import com.lelann.factions.utils.ItemUtils;
 import com.lelann.stand.StandPlugin;
+import com.lelann.stand.abstracts.StandObject;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -30,7 +31,7 @@ import lombok.Setter;
  *
  */
 
-public abstract class AbstractInventory {
+public abstract class AbstractInventory extends StandObject {
 
 	@Getter@Setter
 	private String title;
@@ -136,6 +137,7 @@ public abstract class AbstractInventory {
 
 	public void addClickable(int slot, ClickableItem item) {
 		InventoryManager.registerItem(this, item);
+		item.setSlot(slot);
 		itemsSlot.put(slot, item);
 		gui.setItem(slot, item.getItem());
 	}
@@ -169,7 +171,7 @@ public abstract class AbstractInventory {
 			});
 		}
 		int startSlot = size-9;
-		for(int slot = 0; slot < 8; slot++) {
+		for(int slot = 0; slot < 9; slot++) {
 			if(slot == 0 && !chest) {
 				addSeparator(startSlot+slot);
 			} else if(slot == 8 && !retour) {
@@ -250,6 +252,15 @@ public abstract class AbstractInventory {
 	public void update() {
 		//System.out.println("updating inv");
 		//Packets.updateInventory(getPlayer(), getInventory());
+	}
+	
+	public ItemStack[] getContents(int lines) {
+		int size = 9 * lines;
+		ItemStack[] total = new ItemStack[size];
+		for(int slot = 0; slot < size; slot++) {
+			total[slot] = getInventory().getItem(slot);
+		}
+		return total;
 	}
 	
 	public abstract boolean onClick(Player p, ItemStack clicked, ItemStack cursor, int slot, InventoryAction action, ClickType clickType, SlotType slotType);

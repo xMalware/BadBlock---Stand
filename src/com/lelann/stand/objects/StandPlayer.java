@@ -24,6 +24,9 @@ import com.lelann.stand.Requests;
 import com.lelann.stand.StandConfiguration;
 import com.lelann.stand.StandPlugin;
 import com.lelann.stand.abstracts.StandObject;
+import com.lelann.stand.inventories.StandGUI;
+import com.lelann.stand.inventories.abstracts.AbstractInventory;
+import com.lelann.stand.inventories.abstracts.InventoryManager;
 
 import fr.devhill.socketinventory.json.bukkit.JSON;
 import lombok.Getter;
@@ -122,7 +125,7 @@ public class StandPlayer extends StandObject {
 		return player == null ? 0 : player.getMoney();
 	}
 	
-	public void remove(int money){
+	public void remove(long money){
 		FactionPlayer player = Main.getInstance().getPlayersManager().getPlayer(uniqueId);
 		if(player != null) {
 			player.removeMoney(money);
@@ -202,8 +205,18 @@ public class StandPlayer extends StandObject {
 		return stand;
 	}
 	
+	public void openStand(Player to) {
+		StandGUI gui = new StandGUI(to, this);
+		AbstractInventory before = InventoryManager.getGui(to.getOpenInventory().getTopInventory());
+		if(before != null) {
+			before.displayGui(gui);
+		} else {
+			gui.show(to);
+		}
+	}
+	
 	@Deprecated
-	public void openStand(Player to){
+	public void openeStand(Player to){
 		int size = getOffers().size();
 		size += size % 9 == 0 ? 0 : 9 - (size % 9);
 		

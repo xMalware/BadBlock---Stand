@@ -34,7 +34,7 @@ public class TopGUI extends AbstractInventory {
 	
 	private final double TAXE = 0.10;
 	
-	private int totalMoney = 0;
+	private double totalMoney = 0;
 	private int totalStack = 0;
 
 	private Map<StandOffer, Integer> amounts = new HashMap<>();
@@ -44,6 +44,10 @@ public class TopGUI extends AbstractInventory {
 		super(title);
 		this.item = item;
 		setup();
+	}
+	
+	public double taxe(int price) {
+		return Math.round(((price * TAXE)) * 100) / 100.0;
 	}
 
 	public void setup() {
@@ -94,7 +98,6 @@ public class TopGUI extends AbstractInventory {
 		}
 		//editBottomBar(4, getBarClickable(4).update(newStack));
 		getInventory().setItem(getSize() - 9 + 4, newStack);
-		System.out.println("total stack: " + totalStack);
 		update();
 	}
 	
@@ -129,7 +132,7 @@ public class TopGUI extends AbstractInventory {
 			FactionPlayer p = Main.getInstance().getPlayersManager().getPlayer(buying.getOwner());
 			
 			int amount = amounts.get(buying);
-			int priceForPlayer = (int) (buying.getPrice() * amount + Math.floor((amount * buying.getPrice()) * TAXE));
+			long priceForPlayer = (long) (buying.getPrice() * amount + taxe(amount * buying.getPrice()));
 			int priceForOwner = amount * buying.getPrice();
 			
 			//removing money and adding items
@@ -143,14 +146,14 @@ public class TopGUI extends AbstractInventory {
 			}
 			
 			if(owner.getPlayer() != null){
-				owner.sendMessage("&b[&7Stand&b]&7 Vous venez de vendre &a" + amount + " " + buying.getName() + "&7 à &a" + player.getPlayer().getName() + "&7 pour &a" + priceForOwner + "$&7 !");
+				owner.sendMessage(PREFIX + "Vous venez de vendre &a" + amount + " " + buying.getName() + "&7 à &a" + player.getPlayer().getName() + "&7 pour &a" + priceForOwner + "$&7 !");
 			}
 			
 			ItemStack item = buying.getItem();
 			item.setAmount(amount);
 			
 			player.getPlayer().getInventory().addItem(item);
-			player.sendMessage("&b[&7Stand&b]&7 Vous venez d'acheter &a" + amount + " " + buying.getName() + "&7 à &a" + p.getLastUsername() + "&7 pour &a" + priceForPlayer + "$&7 !");
+			player.sendMessage(PREFIX + "&8&l[&7Stand&8&l]&7 Vous venez d'acheter &a" + amount + " " + buying.getName() + "&7 à &a" + p.getLastUsername() + "&7 pour &a" + priceForPlayer + "$&7 !");
 			
 			Requests.savePlayer(owner);
 			//getPlayer().closeInventory();
@@ -171,7 +174,7 @@ public class TopGUI extends AbstractInventory {
 		System.out.println("current amount : " + getInventory().getItem(slot).getAmount() + " slot=" + slot + ", type=" + offer.getItem().getType() + ", offer: " + offer.getAmount() + ", owner: " + offer.getOwner());
 		if(getInventory().getItem(slot).getAmount() < offer.getAmount() || getInventory().getItem(slot).getDurability() == 14) {
 			totalStack++;
-			totalMoney += offer.getPrice() + Math.floor(offer.getPrice() * TAXE);
+			totalMoney += offer.getPrice() + taxe(offer.getPrice());
 			indicator(slot, true);
 			amounts.put(offer, getInventory().getItem(slot).getAmount());
 			updateBuyItem();
@@ -188,7 +191,7 @@ public class TopGUI extends AbstractInventory {
 		
 		if(getInventory().getItem(slot).getAmount() > 1 || getInventory().getItem(slot).getDurability() == 13 && totalStack > 0) {
 			totalStack--;
-			totalMoney-=offer.getPrice() + Math.floor(offer.getPrice() * TAXE);
+			totalMoney-=offer.getPrice() + taxe(offer.getPrice());
 			indicator(slot, false);
 			if(totalStack <= 0) {
 				amounts.remove(offer);
@@ -266,13 +269,14 @@ public class TopGUI extends AbstractInventory {
 					if(owner != null)
 						name = owner.getLastUsername();
 					else {
+						if(printIndex > 0)
 						printIndex--;
 						continue;
 					}
 					
 					ItemStack head = ItemUtils.createHead("&7Stand: " + StandPlugin.get().getPlayer(offer.getOwner()).getStandName(), name);
 					ItemStack addToCart = ItemUtils.create("&aAjouter&7 ou&c retirer", new String[] {"", "&7> &bClic gauche&7 pour ajouter une unité", "&7> &bClic droit&7 pour retirer une unité"}, Material.STAINED_GLASS_PANE, 14);
-					ItemStack concerned = ItemUtils.create("&7Vendeur: &b" + name, new String[] {"&7Prix: &b" + offer.getPrice() + "$", "&7Taxe: &b" + Math.floor((offer.getPrice() * 0.10)) + "$"}, offer.getType(), offer.getAmount(), offer.getData());
+					ItemStack concerned = ItemUtils.create("&7Vendeur: &b" + name, new String[] {"&7Prix: &b" + offer.getPrice() + "$", "&7Taxe: &b" + taxe(offer.getPrice()) + "$"}, offer.getType(), offer.getAmount(), offer.getData());
 					
 					ClickableItem clickHead = new ClickableItem(head, new ItemAction() {
 						
@@ -337,13 +341,14 @@ public class TopGUI extends AbstractInventory {
 					if(owner != null)
 						name = owner.getLastUsername();
 					else {
+						if(printIndex > 0)
 						printIndex--;
 						continue;
 					}
 					
 					ItemStack head = ItemUtils.createHead("&7Stand: " + StandPlugin.get().getPlayer(offer.getOwner()).getStandName(), name);
 					ItemStack addToCart = ItemUtils.create("&aAjouter&7 ou&c retirer", new String[] {"", "&7> &bClic gauche&7 pour ajouter une unité", "&7> &bClic droit&7 pour retirer une unité"}, Material.STAINED_GLASS_PANE, 14);
-					ItemStack concerned = ItemUtils.create("&7Vendeur: &b" + name, new String[] {"&7Prix: &b" + offer.getPrice() + "$", "&7Taxe: &b" + Math.floor((offer.getPrice() * 0.10)) + "$"}, offer.getType(), offer.getAmount(), offer.getData());
+					ItemStack concerned = ItemUtils.create("&7Vendeur: &b" + name, new String[] {"&7Prix: &b" + offer.getPrice() + "$", "&7Taxe: &b" + taxe(offer.getPrice()) + "$"}, offer.getType(), offer.getAmount(), offer.getData());
 					
 					ClickableItem clickHead = new ClickableItem(head, new ItemAction() {
 						

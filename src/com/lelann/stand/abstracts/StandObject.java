@@ -15,6 +15,9 @@ import com.lelann.stand.StandPlugin;
 import com.lelann.stand.objects.StandPlayer;
 
 public abstract class StandObject {
+	
+	public static final String PREFIX = "&8&l[&7Stand&8&l]&7 ";
+	
 	public StandPlugin getPlugin(){
 		return StandPlugin.get();
 	}

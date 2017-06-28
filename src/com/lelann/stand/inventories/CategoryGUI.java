@@ -58,6 +58,7 @@ public class CategoryGUI extends AbstractInventory {
 
 	@Override
 	public void onClose(Player p) {
+		System.out.println("closed !");
 		if(editing) {
 			editing = false;
 			setActive(true);
@@ -78,6 +79,7 @@ public class CategoryGUI extends AbstractInventory {
 		resetBottomBar(true, true);
 		
 		p.closeInventory();
+		StandPlugin.get().getManager().reload();
 	}
 	
 	public ItemStack[] getContents() {
@@ -102,6 +104,11 @@ public class CategoryGUI extends AbstractInventory {
 			}
 		}));
 		show(player);
+	}
+
+	public void resetAll() {
+		//InventoryManager.unregisterItems(this);
+		InventoryManager.removeGui(this);
 	}
 
 }

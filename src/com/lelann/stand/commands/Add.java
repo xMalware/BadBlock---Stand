@@ -53,7 +53,12 @@ public class Add extends AbstractCommand {
 			Material type = item.getType();
 			byte data = item.getData().getData();
 
-			if(offer == null && player.getMaxOfferNumber() <= player.getOffers().size()){
+			int max = player.getMaxOfferNumber();
+			if(max > (9*5)) {
+				max = 9*5;
+			}
+			
+			if(offer == null && max <= player.getOffers().size()){
 				sendMessage(sender, "&cVous avez atteind le nombre maximum d'offres possible, pensez à passer au grade supérieur !"); return;
 			}
 
