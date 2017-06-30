@@ -21,8 +21,8 @@ public class CategoryGUI extends AbstractInventory {
 	private CategoryPNJ from;
 	private boolean editing = false;
 	
-	public CategoryGUI(String title, CategoryPNJ from) {
-		super(title);
+	public CategoryGUI(String title, CategoryPNJ from, Player viewer) {
+		super(title, viewer);
 		this.from = from;
 		setup();
 	}
@@ -53,17 +53,13 @@ public class CategoryGUI extends AbstractInventory {
 	@Override
 	public boolean onClick(Player p, ItemStack clicked, ItemStack cursor, int slot, InventoryAction action,
 			ClickType clickType, SlotType slotType) {
-		return isActive();
+		return isActive() || slot > (getSize()-9);
 	}
 
 	@Override
 	public void onClose(Player p) {
-		System.out.println("closed !");
 		if(editing) {
-			editing = false;
-			setActive(true);
-			
-			p.sendMessage("&cModification annulée");
+			saveInventory(p);
 		}
 	}
 	
@@ -74,7 +70,7 @@ public class CategoryGUI extends AbstractInventory {
 		from.setItems(getContents());
 		
 		StandPlugin.get().getManager().savePnjs();
-		p.sendMessage("PNJ modifié !");
+		ChatUtils.sendMessage(p, "&aPNJ modifié !");
 		
 		resetBottomBar(true, true);
 		
@@ -84,7 +80,7 @@ public class CategoryGUI extends AbstractInventory {
 	
 	public ItemStack[] getContents() {
 		ItemStack[] stacks = new ItemStack[9 * 5];
-		for(int slot = 0; slot < getSize()-10; slot++) {
+		for(int slot = 0; slot < getSize()-9; slot++) {
 			stacks[slot] = getInventory().getItem(slot);
 		}
 		return stacks;
@@ -95,7 +91,11 @@ public class CategoryGUI extends AbstractInventory {
 			ChatUtils.sendMessage(player, "&cQuelqu'un est déjà en train de modifier ce pnj !");
 			return;
 		}
+		editing = true;
 		setActive(false);
+		
+		editBottomBar(0, new ClickableItem(getSeparator(), null));
+		
 		ItemStack validate = ItemUtils.create("&aValider", Material.STAINED_GLASS_PANE, 13);
 		editBottomBar(4, new ClickableItem(validate, new ItemAction() {
 			@Override
@@ -103,7 +103,18 @@ public class CategoryGUI extends AbstractInventory {
 				saveInventory(p);
 			}
 		}));
-		show(player);
+		
+		ItemStack editColor = ItemUtils.create("&7Modifier le type de pnj", new String[] {"&7Cliquez pour changer la profession du pnj !"}, Material.WOOL, from.getColor());
+		editBottomBar(2, new ClickableItem(editColor, new ItemAction() {
+			
+			@Override
+			public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
+				from.changeProfession();
+				getInventory().setItem(getSize() - 9 + 2, ItemUtils.create("&7Modifier le type de pnj", new String[] {"&7Cliquez pour changer la profession du pnj !"}, Material.WOOL, from.getColor()));
+			}
+		}));
+		
+		show();
 	}
 
 	public void resetAll() {

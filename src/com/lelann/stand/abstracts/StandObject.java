@@ -18,6 +18,16 @@ public abstract class StandObject {
 	
 	public static final String PREFIX = "&8&l[&7Stand&8&l]&7 ";
 	
+	public String header(String what) {
+		return "&8&l«&b&l-&8&l»&m----------&8[&7" + what + "&8]&m----------&f&8&l«&b&l-&8&l»&b";
+	}
+	
+	public String footer(String what) {
+		String toAdd = "";
+		for(int i=0;i<what.length();i++) toAdd+="-";
+		return "&8&l«&b&l-&8&l»&m----------" + toAdd + "-----------&f&8&l«&b&l-&8&l»&b";
+	}
+	
 	public StandPlugin getPlugin(){
 		return StandPlugin.get();
 	}

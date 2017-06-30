@@ -4,12 +4,14 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.inventory.ItemStack;
 
 import com.lelann.factions.Main;
+import com.lelann.factions.api.FactionPlayer;
 import com.lelann.factions.database.Callback;
 import com.lelann.factions.database.Database;
 import com.lelann.stand.objects.StandOffer;
@@ -56,7 +58,32 @@ public class Requests {
 		}.start();
 	}
 	
-	public static void getTop(final ItemStack item, final int limit, final boolean cheap, final Callback<List<StandOffer>> done){
+	public static void getTop(ItemStack item, int limit, boolean cheap, Callback<List<StandOffer>> done) {
+		List<StandOffer> offers = offers(item);
+		if(offers == null) done.call(new Throwable("Pas d'offre pour cet item."), null);
+		List<StandOffer> base = offers(item);
+		base.sort(Comparator.comparing(StandOffer::getPrice));
+		if(!cheap) {
+			Collections.reverse(base);
+		}
+		base = base.subList(0, limit >= offers.size() ? offers.size() : limit);
+		done.call(null, base);
+	}
+	
+	@SuppressWarnings("deprecation")
+	public static List<StandOffer> offers(ItemStack item) {
+		List<StandOffer> base = new ArrayList<>();
+		for(StandOffer offer : StandPlayer.allOffers) {
+			if(offer.getType() == item.getType() && offer.getData() == item.getData().getData()) {
+				FactionPlayer owner = Main.getInstance().getPlayersManager().getPlayer(offer.getOwner());
+				if(owner == null) continue;
+				base.add(offer);
+			}
+		}
+		return base;
+	}
+	
+	public static void geteTop(final ItemStack item, final int limit, final boolean cheap, final Callback<List<StandOffer>> done){
 		
 		new Thread(){
 			@SuppressWarnings("deprecation")

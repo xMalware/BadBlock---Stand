@@ -21,10 +21,6 @@ public class CommandsManager {
 			commands.put(aliase, command);
 		}
 	}
-	public void sendHelp(CommandSender sender){
-		for(AbstractCommand command : commands.values())
-			command.sendHelp(sender);
-	}
 	public AbstractCommand get(String name){
 		return commands.get(name.toLowerCase());
 	}

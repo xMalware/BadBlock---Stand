@@ -10,7 +10,7 @@ import com.lelann.stand.objects.StandPlayer;
 
 public class SetName extends AbstractCommand {
 	public SetName() {
-		super("setname", "stand.play.setname", "%gold%/stand setname %red%name", "%gold%Change le nom de votre stand pour %red%name", "/stand setname <name>", null);
+		super("setname", "stand.play.setname", "&c&l>&7 /stand setname &bname", "&7Change le nom de votre stand pour &bname", "/stand setname <name>", null);
 	}
 
 	@Override

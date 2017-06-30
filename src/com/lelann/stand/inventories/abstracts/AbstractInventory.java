@@ -15,6 +15,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import com.lelann.factions.utils.ChatUtils;
@@ -33,6 +34,8 @@ import lombok.Setter;
 
 public abstract class AbstractInventory extends StandObject {
 
+	private HashMap<String, List<AbstractInventory>> backs = new HashMap<>();
+	
 	@Getter@Setter
 	private String title;
 	
@@ -55,16 +58,18 @@ public abstract class AbstractInventory extends StandObject {
 	@Getter@Setter
 	private ItemStack separator;
 	
-	public AbstractInventory(String title) {
+	public AbstractInventory(String title, Player p) {
 		this.title = title;
 		this.size = 54;
+		setPlayer(p);
 		defaultSeparator();
 		build();
 	}
 	
-	public AbstractInventory(String title, int size) {
+	public AbstractInventory(String title, int size, Player p) {
 		this.title = title;
 		this.size = size;
+		setPlayer(p);
 		defaultSeparator();
 		build();
 	}
@@ -81,19 +86,31 @@ public abstract class AbstractInventory extends StandObject {
 		setSeparator(sepa);
 	}
 	
-	public void show(Player p) {
-		setPlayer(p);
-		p.openInventory(gui);
+	/*
+	 * Gui0 this;
+	 * Gui1 gui;
+	 * 
+	 * 
+	 * gui.show(this)
+	 * 
+	 * this.displayGui(this);
+	 * 
+	 */
+	
+	public void show() {
+		getPlayer().openInventory(gui);
 	}
 	
 	public void displayGui(AbstractInventory gui) {
 		gui.back = this;
-		gui.show(player);
+		gui.show();
 	}
 	
 	public boolean goBack() {
 		if(back != null) {
-			back.show(player);
+			InventoryManager.restore(back);
+			AbstractInventory inv = back;
+			inv.show();
 			back = null;
 		}
 		else player.closeInventory();
@@ -101,7 +118,7 @@ public abstract class AbstractInventory extends StandObject {
 	}
 	
 	public boolean isSimilar(Inventory inv) {
-		return inv == gui || (size == inv.getSize() && ChatUtils.colorDelete(title).equals(ChatUtils.colorDelete(inv.getTitle())));
+		return inv != null && (inv == gui || (size == inv.getSize() && ChatUtils.colorDelete(title).equals(ChatUtils.colorDelete(inv.getTitle()))));
 	}
 
 	public boolean callClickEvent(InventoryClickEvent e) {
@@ -109,6 +126,7 @@ public abstract class AbstractInventory extends StandObject {
 	}
 	
 	public void callCloseEvent(InventoryCloseEvent e) {
+		InventoryManager.removeGui(this);
 		onClose((Player) e.getPlayer());
 	}
 	
@@ -261,6 +279,41 @@ public abstract class AbstractInventory extends StandObject {
 			total[slot] = getInventory().getItem(slot);
 		}
 		return total;
+	}
+	
+	public boolean give(ItemStack item){
+		PlayerInventory inv = getPlayer().getInventory();
+		int maxStack = item.getMaxStackSize();
+		int neededPlace = (item.getAmount() / maxStack) + (item.getAmount() % maxStack == 0 ? 0 : 1);
+		int findedPlace = 0;
+
+		for(int i=0;i<inv.getSize();i++){
+			if(inv.getItem(i) == null){
+				findedPlace++;
+			}
+		}
+
+		int currentAmount = 0;
+		int neededAmount = item.getAmount();
+
+		if(findedPlace < neededPlace) return false;
+
+		for(int i=0;i<inv.getSize();i++){
+			if(currentAmount == neededAmount) break;
+			if(inv.getItem(i) == null){
+				int amount = maxStack;
+				if(currentAmount + amount > neededAmount){
+					amount = neededAmount - currentAmount;
+				}
+
+				currentAmount += amount;
+
+				ItemStack is = item.clone(); is.setAmount(amount);
+				inv.setItem(i, is);
+			}
+		}
+
+		return true;
 	}
 	
 	public abstract boolean onClick(Player p, ItemStack clicked, ItemStack cursor, int slot, InventoryAction action, ClickType clickType, SlotType slotType);

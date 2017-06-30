@@ -13,11 +13,11 @@ public class Tops {
 	 * @param item L'item pour lequel on recherche le top
 	 */
 	public static void openTopGui(Player p, ItemStack item) {
-		getTopGui(item).showBefore(p);
+		getTopGui(item, p).showBefore();
 	}
 	
-	private static TopGUI getTopGui(ItemStack item) {
-		return new TopGUI("&7Voir les prix de ventes | " + item.getType().name().replace("_", " "), item);
+	private static TopGUI getTopGui(ItemStack item, Player p) {
+		return new TopGUI("&7Voir les prix de ventes | " + item.getType().name().replace("_", " "), item, p);
 	}
 	
 }

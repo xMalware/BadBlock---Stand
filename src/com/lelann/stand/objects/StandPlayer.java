@@ -45,6 +45,8 @@ public class StandPlayer extends StandObject {
 	@Getter@Setter private long standRemove;
 	@Getter@Setter private Location standLoc;
 	
+	public static List<StandOffer> allOffers = new ArrayList<>();
+	
 	private boolean toCreate = false;
 	
 	public List<StandOffer> getOffers(){
@@ -72,7 +74,7 @@ public class StandPlayer extends StandObject {
 			standLoc = JSON.saveAsObject(JSON.loadFromString(temp), Location.class);
 		}
 		
-		//loadOffers(syncLoad);
+		loadOffers(syncLoad);
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -88,32 +90,45 @@ public class StandPlayer extends StandObject {
 		return null;
 	}
 	
-	private void loadOffers(boolean syncLoad){
+	public void addOffer(StandOffer offer) {
+		getOffers().add(offer);
+		allOffers.add(offer);
+	}
+	
+	public void removeOffer(StandOffer offer) {
+		offer.setAmount(0);
+		Requests.saveOffer(offer);
+		getOffers().remove(offer);
+		allOffers.remove(offer);
+	}
+	
+	private void loadOffers(boolean syncLoad) {
 		offers = null;
 		
-		Requests.getOffers(uniqueId, new Callback<List<StandOffer>>(){
+		Requests.getOffers(uniqueId, new Callback<List<StandOffer>>() {
 			@Override
 			public void call(Throwable t, List<StandOffer> result) {
 				if(t == null){
 					offers = result;
+					//System.out.println("Loaded " + result.size() + " offers for player " + uniqueId);
 				} else {
 					offers = new ArrayList<StandOffer>();
 				}
 			}
 		});
 		
-		if(syncLoad){
-			while(offers == null){
+		if(syncLoad) {
+			while(offers == null) {
 				try {
 					Thread.sleep(3L);
 				} catch (InterruptedException unused){}
 			}
 		}
 		
-		System.out.println("loaded");
+		offers.forEach(offer -> allOffers.add(offer));
 	}
 	
-	public boolean hasEnough(int money){
+	public boolean hasEnough(int money) {
 		FactionPlayer player = Main.getInstance().getPlayersManager().getPlayer(uniqueId);
 		
 		return player == null ? false : player.hasEnough(money);
@@ -133,7 +148,7 @@ public class StandPlayer extends StandObject {
 		}
 	}
 	
-	public void add(int money){
+	public void add(long money){
 		FactionPlayer player = Main.getInstance().getPlayersManager().getPlayer(uniqueId);
 		if(player != null) {
 			player.addMoney(money);
@@ -207,11 +222,11 @@ public class StandPlayer extends StandObject {
 	
 	public void openStand(Player to) {
 		StandGUI gui = new StandGUI(to, this);
-		AbstractInventory before = InventoryManager.getGui(to.getOpenInventory().getTopInventory());
+		AbstractInventory before = InventoryManager.getGui(to.getOpenInventory().getTopInventory(), to);
 		if(before != null) {
 			before.displayGui(gui);
 		} else {
-			gui.show(to);
+			gui.show();
 		}
 	}
 	
@@ -298,12 +313,6 @@ public class StandPlayer extends StandObject {
 		return result;
 	}
 	
-	public void removeOffer(StandOffer offer){
-		offer.setAmount(0);
-		Requests.saveOffer(offer);
-		getOffers().remove(offer);
-	}
-	
 	public int getMaxOfferNumber(){
 		if(isValid())
 			return StandConfiguration.getInstance().allowedOfferNumber(getPlayer());
@@ -347,4 +356,5 @@ public class StandPlayer extends StandObject {
 		WAITING_KICK,
 		NOTHING;
 	}
+
 }

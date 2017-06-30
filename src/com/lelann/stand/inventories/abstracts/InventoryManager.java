@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -13,29 +16,18 @@ import com.lelann.stand.inventories.LoadingGUI;
 import com.lelann.stand.inventories.abstracts.AbstractInventory.ItemAction;
 import com.lelann.stand.objects.CategoryPNJ;
 
-import lombok.Getter;
-
 public class InventoryManager {
-
-	private static Map<Inventory, AbstractInventory> guisByInvs = new HashMap<>();
 	
 	public static List<AbstractInventory> guis = new ArrayList<>();
 	public static Map<AbstractInventory, List<ClickableItem>> clickables = new HashMap<>();
 	
+	public static List<AbstractInventory> restorables = new ArrayList<>();
+	public static Map<AbstractInventory, List<ClickableItem>> restorabelsClickables = new HashMap<>();
+	
 	public static Map<CategoryPNJ, CategoryGUI> categoryGuis = new HashMap<>();
 	
-	@Getter
-	private static LoadingGUI loadingGui;
-	
-	static {
-		createLoadingGui();
-	}
-	
-	public static void createLoadingGui() {
-		if(loadingGui != null) return;
-		else {
-			loadingGui = new LoadingGUI("&7Chargement | Veuillez patienter");
-		}
+	public static LoadingGUI getLoadingGui(Player p) {
+		return new LoadingGUI("&7Chargement", p);
 	}
 	
 	public static void addGui(AbstractInventory gui) {
@@ -44,8 +36,11 @@ public class InventoryManager {
 	}
 	
 	public static void removeGui(AbstractInventory gui) {
+		restorables.add(gui);
 		guis.remove(gui);
+		restorabelsClickables.put(gui, clickables.get(gui));
 		clickables.remove(gui);
+		
 	}
 
 	public static void registerItem(AbstractInventory gui, ItemStack item, ItemAction action) {
@@ -70,34 +65,46 @@ public class InventoryManager {
 		items.add(item);
 		clickables.put(gui, items);
 	}
+
+	public static CategoryGUI getCategoryGui(Player p, CategoryPNJ pnj) {
+		return new CategoryGUI(pnj.getGuiTitle(), pnj, p);
+	}
 	
-	public static CategoryGUI createCategoryGui(String title, CategoryPNJ from) {
-		if(categoryGuis.containsKey(from)) {
-			categoryGuis.get(from).resetAll();
-			categoryGuis.put(from, new CategoryGUI(title, from));
-			return categoryGuis.get(from);
+	public static AbstractInventory getClickedGui(InventoryClickEvent event) {
+		for(AbstractInventory gui : InventoryManager.guis) {
+			if(gui.isSimilar(event.getClickedInventory()) && gui.getPlayer().getName().equals(event.getWhoClicked().getName())) {
+				return gui;
+			}
 		}
-		else {
-			CategoryGUI created = new CategoryGUI(title, from);
-			categoryGuis.put(from, created);
-			return created;
+		return null;
+	}
+	
+	public static AbstractInventory getClickedGui(InventoryCloseEvent event) {
+		for(AbstractInventory gui : InventoryManager.guis) {
+			if(gui.isSimilar(event.getInventory()) && gui.getPlayer().getName().equals(event.getPlayer().getName())) {
+				return gui;
+			}
 		}
+		return null;
 	}
 
-	public static CategoryGUI getCategoryGui(CategoryPNJ pnj) {
-		return categoryGuis.get(pnj);
-	}
-	
-	public static AbstractInventory getGui(Inventory inv) {
-		if(guisByInvs.containsKey(inv)) return guisByInvs.get(inv);
-		else {
-			for(AbstractInventory gui : InventoryManager.guis) {
-				if(gui.isSimilar(inv)) {
-					guisByInvs.put(inv, gui);
-					return gui;
-				}
+	public static AbstractInventory getGui(Inventory inv, Player player) {
+		for(AbstractInventory gui : InventoryManager.guis) {
+			if(gui.isSimilar(inv) && gui.getPlayer().getName().equals(player.getName())) {
+				return gui;
 			}
-			return null;
+		}
+		return null;
+	}
+
+	public static void restore(AbstractInventory gui) {
+		if(restorables.contains(gui)) {
+			guis.add(gui);
+			restorables.remove(gui);
+		}
+		if(restorabelsClickables.containsKey(gui)) {
+			clickables.put(gui, restorabelsClickables.get(gui));
+			restorabelsClickables.remove(gui);
 		}
 	}
 	

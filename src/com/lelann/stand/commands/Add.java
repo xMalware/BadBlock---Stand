@@ -12,7 +12,7 @@ import com.lelann.stand.objects.StandPlayer;
 
 public class Add extends AbstractCommand {
 	public Add() {
-		super("add", "stand.play.add", "%gold%/stand add %red%<prix unitaire>", "%gold%Ajoute l'item dans votre main à vos offres à %red%price %gold%l'unité.", "/stand add <type>", null);
+		super("add", "stand.play.add", "&c&l>&7 /stand add &bprix unitaire", "&7Ajoute l'item dans votre main à vos offres à &bprice &7l'unité.", "/stand add <type>", null);
 	}
 
 	@SuppressWarnings("deprecation")
@@ -85,7 +85,7 @@ public class Add extends AbstractCommand {
 			if(offer == null){
 				offer = new StandOffer(player.getUniqueId(), item, price);
 				offer.setAmount(0);
-				player.getOffers().add(offer);
+				player.addOffer(offer);
 			}
 
 			offer.add(count);

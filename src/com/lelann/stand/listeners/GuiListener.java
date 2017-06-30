@@ -20,7 +20,7 @@ public class GuiListener extends StandObject implements Listener {
 	
 	@EventHandler
 	public void guiClick(InventoryClickEvent e) {
-		AbstractInventory gui = InventoryManager.getGui(e.getClickedInventory());
+		AbstractInventory gui = InventoryManager.getClickedGui(e);
 		if(gui == null) {
 			System.out.println("gui is null");
 			return;
@@ -39,7 +39,7 @@ public class GuiListener extends StandObject implements Listener {
 	
 	@EventHandler 
 	public void guiClose(InventoryCloseEvent e) {
-		AbstractInventory gui = InventoryManager.getGui(e.getInventory());
+		AbstractInventory gui = InventoryManager.getClickedGui(e);
 		if(gui == null) return;
 		
 		gui.callCloseEvent(e);

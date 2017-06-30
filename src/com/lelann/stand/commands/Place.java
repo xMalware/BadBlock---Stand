@@ -21,7 +21,7 @@ import com.lelann.stand.selection.CuboidSelection;
 
 public class Place extends AbstractCommand {
 	public Place() {
-		super("place", "stand.play.place", "%gold%/stand place", "%gold%Place un PNJ à votre place et vous déconnecte.", "/stand setname <name>", null);
+		super("place", "stand.play.place", "&c&l>&7 /stand place", "&7Place un PNJ à votre place et vous déconnecte.", "/stand place", null);
 	}
 
 	@Override

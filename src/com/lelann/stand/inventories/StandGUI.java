@@ -20,7 +20,7 @@ public class StandGUI extends AbstractInventory {
 	private StandPlayer owner;
 	
 	public StandGUI(Player viewer, StandPlayer owner) {
-		super(owner.getStandName(), 9*6);
+		super(owner.getStandName(), 9*6, viewer);
 		this.viewer = getPlayer(viewer);
 		this.owner = owner;
 		setup();
@@ -35,7 +35,7 @@ public class StandGUI extends AbstractInventory {
 			StandOffer offer = owner.getOffers().get(i);
 			ItemStack stack = offer.createItemStack("&7Vente à &b" + offer.getPrice() + "&7 l'unité", "",
 					"&7> &bClic gauche&7 pour acheter",
-					canModify ? "&7>&b Clic droit pour supprimer l'offre" : "");
+					canModify ? "&7>&b Clic droit&7 pour supprimer l'offre" : "");
 			ClickableItem item = new ClickableItem(stack, new ItemAction() {
 				
 				@Override
@@ -69,10 +69,12 @@ public class StandGUI extends AbstractInventory {
 		}
 		
 		StandOffer offer = owner.getOffers().get(slot);
+		ItemStack toGive = offer.createItemStack(offer.getAmount());
 		owner.removeOffer(offer);
 		
 		remove(slot);
 		
+		viewer.getPlayer().getInventory().addItem(toGive);
 		viewer.sendMessage("&aL'offre a été supprimée !");
 	}
 	
@@ -106,7 +108,7 @@ public class StandGUI extends AbstractInventory {
 
 	@Override
 	public void onClose(Player p) {
-		InventoryManager.removeGui(this);
+		//InventoryManager.removeGui(this);
 	}
 
 }

@@ -10,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 import com.lelann.factions.Main;
 import com.lelann.factions.api.FactionPlayer;
 import com.lelann.factions.utils.ItemUtils;
+import com.lelann.stand.Requests;
 import com.lelann.stand.inventories.abstracts.AbstractInventory;
 import com.lelann.stand.inventories.abstracts.ClickableItem;
 import com.lelann.stand.inventories.abstracts.InventoryManager;
@@ -22,11 +23,17 @@ public class BuyGUI extends AbstractInventory {
 	private int quantity = 1;
 	private StandPlayer viewer;
 	
+	private final double TAXE = 0.10;
+	
 	public BuyGUI(StandOffer offer, Player p) {
-		super("&7Définissez la quantité que vous souhaitez", 9*3);
+		super("&7Définissez la quantité que vous souhaitez", 9*3, p);
 		this.offer = offer;
 		this.viewer = getPlayer(p);
 		setup();
+	}
+	
+	public double taxe(int price) {
+		return Math.round(((price * TAXE)) * 100) / 100.0;
 	}
 	
 	private void setup() {
@@ -44,8 +51,8 @@ public class BuyGUI extends AbstractInventory {
 	private void setupBuyItem() {
 		ItemStack newStack = ItemUtils.create("&aValider votre achat", new String[] {"&7Vous êtes sur le point d'acheter&b " + quantity + "&7 items",
 				"&7Argent: &b" + viewer.getMoney() + "$",
-				"&7Coût: &b" + (offer.getPrice() * quantity) + "$",
-				"&7Après achat: &b" + (viewer.getMoney()-(offer.getPrice() * quantity)) + "$",
+				"&7Coût: &b" + (offer.getPrice() * quantity + taxe(offer.getPrice() * quantity)) + "$",
+				"&7Après achat: &b" + (viewer.getMoney()-((offer.getPrice() * quantity) + taxe(offer.getPrice() * quantity))) + "$",
 				"",
 				"&7Cliquez pour acheter !"}, Material.BOOK);
 		ItemAction action = new ItemAction() {
@@ -62,8 +69,8 @@ public class BuyGUI extends AbstractInventory {
 	private void updateBuyItem() {
 		ItemStack newStack = ItemUtils.create("&aValider votre achat", new String[] {"&7Vous êtes sur le point d'acheter&b " + quantity + "&7 items",
 				"&7Argent: &b" + viewer.getMoney() + "$",
-				"&7Coût: &b" + (offer.getPrice() * quantity) + "$",
-				"&7Après achat: &b" + (viewer.getMoney()-(offer.getPrice() * quantity)) + "$",
+				"&7Coût: &b" + (offer.getPrice() * quantity + taxe(offer.getPrice() * quantity)) + "$",
+				"&7Après achat: &b" + (viewer.getMoney()-((offer.getPrice() * quantity) + taxe(offer.getPrice() * quantity))) + "$",
 				"",
 				"&7Cliquez pour acheter !"}, Material.BOOK);
 		getInventory().setItem(getSize() - 9 + 4, newStack);
@@ -96,22 +103,35 @@ public class BuyGUI extends AbstractInventory {
 		StandPlayer owner = offer.getPlayer(offer.getOwner());
 		FactionPlayer p = Main.getInstance().getPlayersManager().getPlayer(offer.getOwner());
 		
-		int price = offer.getPrice() * quantity;
-		
-		viewer.remove(price);
-		owner.add(price);
-		
-		if(owner != null) {
-			owner.sendMessage(PREFIX + "Vous venez de vendre &a" + quantity + " " + offer.getName() + "&7 à &a" + viewer.getPlayer().getName() + "&7 pour &a" + price + "$&7 !");
+		if(owner.getUniqueId().equals(viewer.getUniqueId())) {
+			viewer.sendMessage("&cT'es un marrant toi, en fait.");
+			return;
 		}
 		
-		viewer.sendMessage(PREFIX + "Vous venez de d'acheter &a" + quantity + " " + offer.getName() + "&7 à &a" + p.getLastUsername() + "&7 pour &a" + price + "$&7 !");
+		long pricePlayer = (long) ((offer.getPrice() * quantity) + taxe(offer.getPrice() * quantity));
+		int priceOwner = offer.getPrice() * quantity;
+		
+		if(viewer.getMoney() < pricePlayer) {
+			viewer.sendMessage("&cVous n'avez pas assez d'argent !");
+			return;
+		}
+		
+		viewer.remove(pricePlayer);
+		owner.add(priceOwner);
+		
+		if(owner != null) {
+			owner.sendMessage(PREFIX + "Vous venez de vendre &a" + quantity + " " + offer.getName() + "&7 à &a" + viewer.getPlayer().getName() + "&7 pour &a" + priceOwner + "$&7 !");
+		}
+		
+		viewer.sendMessage(PREFIX + "Vous venez de d'acheter &a" + quantity + " " + offer.getName() + "&7 à &a" + p.getLastUsername() + "&7 pour &a" + pricePlayer + "$&7 !");
 		
 		ItemStack item = offer.getItem();
 		item.setAmount(quantity);
 		
-		getPlayer().getInventory().addItem(item);
+		Requests.savePlayer(viewer);
+		Requests.savePlayer(owner);
 		
+		give(item);
 		goBack();
 	}
 	
@@ -186,6 +206,10 @@ public class BuyGUI extends AbstractInventory {
 			return;
 		}
 		
+		if(this.quantity - quantity < 1 && !add) {
+			return;
+		}
+		
 		if(add)
 			this.quantity += quantity;
 		else
@@ -209,7 +233,7 @@ public class BuyGUI extends AbstractInventory {
 
 	@Override
 	public void onClose(Player p) {
-		InventoryManager.removeGui(this);
+		
 	}
 
 	

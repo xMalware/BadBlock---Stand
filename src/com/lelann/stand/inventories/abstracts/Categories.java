@@ -50,7 +50,6 @@ public class Categories {
 	}
 	
 	public static void saveCategory(String identifier, String name, String title, Location loc, ItemStack[] items) {
-		configuration.set("Pnjs", null);
 		configuration.set("Pnjs." + identifier, null);
 		String path = "Pnjs." + identifier;
 		//ConfigurationSection current = configuration.getConfigurationSection(path);
@@ -61,11 +60,11 @@ public class Categories {
 		ConfigUtils.locationToConfig(configuration, path, loc);
 		
 		save();
-		reloadPnjs();
 	}
 	
-	private static void reloadPnjs() {
-		//TODO: reload les inventaires
+	public static void removeCategory(String identifier) {
+		configuration.set("Pnjs." + identifier, null);
+		save();
 	}
 	
 	private static void save() {

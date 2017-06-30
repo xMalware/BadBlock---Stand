@@ -15,7 +15,8 @@ public abstract class AbstractCommand extends StandObject {
 	public static final String NO_PERM = "%red%Vous n'avez pas la permission d'executer cette commande !",
 			NO_CONSOLE = "%red%Seul les joueurs peuvent utiliser cette commande !";
 	public static final String PREFIX = "%darkaqua%[%aqua%Stand%darkaqua%] ";
-	private JRawMessage message;
+//	private JRawMessage message;
+	private JRawMessage[] messages;
 	@Getter private String messageConsole, name, permission;
 
 	public boolean hasPermission(CommandSender sender){
@@ -36,7 +37,8 @@ public abstract class AbstractCommand extends StandObject {
 	
 	public void sendHelp(CommandSender sender){
 		if(sender instanceof Player){
-			message.send((Player) sender);
+			for(JRawMessage message : messages)
+				message.send((Player) sender);
 		} else ChatUtils.sendMessage(sender, messageConsole);
 	}
 	
@@ -49,16 +51,35 @@ public abstract class AbstractCommand extends StandObject {
 	}
 	
 	public AbstractCommand(String name, String permission, String description, String hover, String onClickShow, String onClickRun){
-		message = new JRawMessage(description);
+		messages = new JRawMessage[1];
+		messages[0] = new JRawMessage(description);
 		messageConsole = ChatUtils.colorReplace(description);
 		this.permission = permission;
 		this.name = name;
 		
-		message.addHoverEvent(HoverEventType.SHOW_TEXT, hover);
+		messages[0].addHoverEvent(HoverEventType.SHOW_TEXT, hover);
 		if(onClickShow != null)
-			message.addClickEvent(ClickEventType.SUGGEST_COMMAND, onClickShow, false);
+			messages[0].addClickEvent(ClickEventType.SUGGEST_COMMAND, onClickShow, false);
 		else if(onClickRun != null)
-			message.addClickEvent(ClickEventType.RUN_COMMAND, onClickRun, false);
+			messages[0].addClickEvent(ClickEventType.RUN_COMMAND, onClickRun, false);
+	}
+	
+	public AbstractCommand(String name, String permission, String[] description, String[] hover, String[] onClickShow, String[] onClickRun){
+		messages = new JRawMessage[description.length];
+		for(int i = 0; i < messages.length; i++) {
+			JRawMessage message = new JRawMessage(description[i]);
+			if(hover != null && hover[i] != null)
+				message.addHoverEvent(HoverEventType.SHOW_TEXT, hover[i]);
+			if(onClickShow != null && onClickShow[i] != null)
+				message.addClickEvent(ClickEventType.SUGGEST_COMMAND, onClickShow[i], false);
+			else if(onClickRun != null && onClickRun[i] != null)
+				message.addClickEvent(ClickEventType.RUN_COMMAND, onClickRun[i], false);
+			messages[i] = message;
+		}
+		
+		messageConsole = ChatUtils.colorReplace("&cAh nan :)");
+		this.permission = permission;
+		this.name = name;
 	}
 	
 	public abstract void runCommand(CommandSender sender, String[] args);

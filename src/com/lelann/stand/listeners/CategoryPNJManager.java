@@ -6,16 +6,21 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 
 import com.lelann.factions.runnables.FRunnable;
-import com.lelann.stand.inventories.abstracts.InventoryManager;
+import com.lelann.factions.utils.ChatUtils;
+import com.lelann.factions.utils.JRawMessage;
+import com.lelann.factions.utils.JRawMessage.ClickEventType;
+import com.lelann.stand.abstracts.StandObject;
 import com.lelann.stand.objects.CategoryPNJ;
 
 import lombok.Getter;
 
-public class CategoryPNJManager {
+public class CategoryPNJManager extends StandObject {
 
 	@Getter
 	private Map<UUID, CategoryPNJ> pnjs = new HashMap<>();
@@ -26,21 +31,10 @@ public class CategoryPNJManager {
 		for(final CategoryPNJ pnj : pnjs) {
 			add(pnj);
 		}
-		
-		loadCategoryGuis();
 	}
 	
 	public void reload() {
-		loadCategoryGuis();
-	}
-	
-	/**
-	 * Charge les inventaires
-	 */
-	private void loadCategoryGuis() {
-		for(final CategoryPNJ pnj : pnjs.values()) {
-			InventoryManager.createCategoryGui(pnj.getGuiTitle(), pnj);
-		}
+		
 	}
 	
 	public void add(CategoryPNJ pnj) {
@@ -84,6 +78,37 @@ public class CategoryPNJManager {
 	
 	public CategoryPNJ getPnj(String identifier) {
 		return identifiers.get(identifier);
+	}
+
+	public void sendList(Player p) {
+		String PATTERN = "%name% &8[%id%]&f <>&7 %loc% &f-";
+		JRawMessage space = new JRawMessage(" ");
+		ChatUtils.sendMessage(p, header("Pnjs"));
+		for(CategoryPNJ pnj : pnjs.values()) {
+			JRawMessage message = new JRawMessage("&c&l> ");
+			String actual = PATTERN.replace("%name%", pnj.getName())
+					.replace("%id%", pnj.getIdentifier())
+					.replace("%loc%", pnj.locationToString());
+			JRawMessage details = new JRawMessage(actual);
+			details.addClickEvent(ClickEventType.RUN_COMMAND, "/tp " + pnj.locationToString(), false);
+			
+			JRawMessage edit = new JRawMessage("&2EDIT");
+			edit.addClickEvent(ClickEventType.RUN_COMMAND, "/stand pnj edit " + pnj.getIdentifier(), false);
+			
+			JRawMessage del = new JRawMessage("&cDEL");
+			del.addClickEvent(ClickEventType.RUN_COMMAND, "/stand pnj del " + pnj.getIdentifier(), false);
+			
+			JRawMessage open = new JRawMessage("&3OPEN");
+			open.addClickEvent(ClickEventType.RUN_COMMAND, "/stand pnj open " + pnj.getIdentifier(), false);
+			
+			message.add(details, space, edit, space, del, space, open);
+			
+			System.out.println(message.getMessage());
+			
+			message.send(p);
+		}
+		ChatUtils.sendMessage(p, footer("Pnjs"));
+		
 	}
 	
 }

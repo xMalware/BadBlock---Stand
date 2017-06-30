@@ -11,12 +11,42 @@ import com.lelann.factions.utils.StringUtils;
 import com.lelann.stand.StandPlugin;
 import com.lelann.stand.inventories.CategoryGUI;
 import com.lelann.stand.inventories.abstracts.InventoryManager;
+import com.lelann.stand.listeners.CategoryPNJManager;
 import com.lelann.stand.objects.CategoryPNJ;
 import com.lelann.stand.objects.StandPlayer;
 
 public class Pnj extends AbstractCommand {
 	public Pnj() {
-		super("pnj", "stand.admin.pnj", "%gold%/stand pnj create | setname | del", "%gold%Permet de gérer les PNJs", "/stand pnj", null);
+		super("pnj", 
+		"stand.admin.pnj", 
+		new String[] {
+				"&8&m----------------------------",
+				"&c&l>&7 /stand pnj create &bidentifier",
+				"&c&l>&7 /stand pnj edit &bidentifier",
+				"&c&l>&7 /stand pnj setname &bidentifier name",
+				"&c&l>&7 /stand pnj settitle &bidentifier title",
+				"&c&l>&7 /stand pnj del &bidentifier",
+				"&c&l>&7 /stand pnj list"
+				}, 
+		new String[] {
+				null,
+				"&7Crée un pnj identifié avec &bidentifier&7 sur votre position",
+				"&7Ouvre le menu du pnj &bidentifier&7 en mode édition, pour une modification plus facile et plus rapide",
+				"&7Définit le nouveau nom du pnj &bidentifier&7 pour &bname",
+				"&7Définit le titre du menu du pnj &bidentifier&7 pour &btitle",
+				"&7Supprime le pnj &bidentifier",
+				"&7Liste les pnjs existants"
+				}, 
+		new String[] {
+				null,
+				"/stand pnj create ",
+				"/stand pnj edit ",
+				"/stand pnj setname ",
+				"/stand pnj settitle ",
+				"/stand pnj del ",
+				"/stand pnj list"
+				}, 
+		null);
 	}
 
 	@Override
@@ -46,7 +76,7 @@ public class Pnj extends AbstractCommand {
 				sPlayer.sendMessage("&cL'identifiant n'est pas valide !");
 				return;
 			}
-			CategoryGUI gui = InventoryManager.getCategoryGui(pnj);
+			CategoryGUI gui = InventoryManager.getCategoryGui(player, pnj);
 			gui.openEdit(player);
 			
 		} else if(args[0].equalsIgnoreCase("create")){
@@ -92,6 +122,8 @@ public class Pnj extends AbstractCommand {
 				
 				StandPlugin.get().getManager().reload();
 				StandPlugin.get().getManager().savePnjs();
+				
+				sPlayer.sendMessage("&aLe titre de l'inventaire a été modifié !");
 			}
 			
 		} else if(args[0].equalsIgnoreCase("setname")){
@@ -137,10 +169,25 @@ public class Pnj extends AbstractCommand {
 				sPlayer.sendMessage("&cL'identifiant n'est pas valide !");
 				return;
 			}
-			pnj.getEntity().remove();
+			pnj.delete();
+		} else if(args[0].equalsIgnoreCase("open")) {
 			
-			StandPlugin.get().getManager().getPnjs().remove(pnj.getEntity().getUniqueId());
-			StandPlugin.get().getManager().savePnjs();
+			String identifier = args[1];
+			if(identifier == null) {
+				sPlayer.sendMessage("&cVous devez spécifier une identifiant. Exemple: /stand pnj del blocs");
+				return;
+			}
+			
+			CategoryPNJ pnj = StandPlugin.get().getManager().getPnj(identifier);
+			if(pnj == null) {
+				sPlayer.sendMessage("&cL'identifiant n'est pas valide !");
+				return;
+			}
+			
+			pnj.openGui(player);
+			
+		} else if(args[0].equalsIgnoreCase("list")) {
+			StandPlugin.get().getManager().sendList(player);
 		}
 	}
 }

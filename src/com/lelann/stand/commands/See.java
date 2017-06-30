@@ -9,7 +9,7 @@ import com.lelann.stand.objects.StandPlayer;
 
 public class See extends AbstractCommand {
 	public See() {
-		super("see", "stand.play.see", "%gold%/stand see %red%(player)", "%gold%Voir le stand de %red%name", "/stand see <player>", null);
+		super("see", "stand.play.see", "&c&l>&7 /stand see &bname", "&7Voir le stand de &bname", "/stand see <player>", null);
 	}
 
 	@Override

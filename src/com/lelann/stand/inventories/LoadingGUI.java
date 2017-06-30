@@ -21,8 +21,8 @@ public class LoadingGUI extends AbstractInventory {
 	private int currentState = 0;
 	private BukkitTask task;
 	
-	public LoadingGUI(String title) {
-		super(title, 9);
+	public LoadingGUI(String title, Player p) {
+		super(title, 9, p);
 		setupAnimation();
 		animateLoading();
 		InventoryManager.addGui(this);

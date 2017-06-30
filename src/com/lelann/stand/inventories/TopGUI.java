@@ -11,7 +11,6 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 
 import com.lelann.factions.Main;
 import com.lelann.factions.api.FactionPlayer;
@@ -40,8 +39,8 @@ public class TopGUI extends AbstractInventory {
 	private Map<StandOffer, Integer> amounts = new HashMap<>();
 	private Map<Integer, StandOffer> offersBySlots = new HashMap<>();
 	
-	public TopGUI(String title, ItemStack item) {
-		super(title);
+	public TopGUI(String title, ItemStack item, Player viewer) {
+		super(title, viewer);
 		this.item = item;
 		setup();
 	}
@@ -57,8 +56,6 @@ public class TopGUI extends AbstractInventory {
 			
 			@Override
 			public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
-				
-				System.out.println("OMG, CLICKED BOOK");
 				
 				if(totalStack > 0) {
 					buySelectedItems();
@@ -96,7 +93,7 @@ public class TopGUI extends AbstractInventory {
 		} else {
 			newStack = ItemUtils.create("&aValider votre achat", new String[] {"&cVous devez au moins avoir un item dans votre panier", "&cpour finaliser votre achat !"}, Material.BOOK);
 		}
-		//editBottomBar(4, getBarClickable(4).update(newStack));
+		
 		getInventory().setItem(getSize() - 9 + 4, newStack);
 		update();
 	}
@@ -121,7 +118,7 @@ public class TopGUI extends AbstractInventory {
 		
 		for(StandOffer buying : amounts.keySet()) {
 			
-			if(amounts.get(buying) < 0) continue;
+			if(amounts.get(buying) <= 0) continue;
 			
 			if(buying.getOwner().equals(getPlayer().getUniqueId())) {
 				player.sendMessage("&cT'es un marrant toi, en fait.");
@@ -153,10 +150,10 @@ public class TopGUI extends AbstractInventory {
 			item.setAmount(amount);
 			
 			player.getPlayer().getInventory().addItem(item);
-			player.sendMessage(PREFIX + "&8&l[&7Stand&8&l]&7 Vous venez d'acheter &a" + amount + " " + buying.getName() + "&7 à &a" + p.getLastUsername() + "&7 pour &a" + priceForPlayer + "$&7 !");
+			player.sendMessage(PREFIX + "Vous venez d'acheter &a" + amount + " " + buying.getName() + "&7 à &a" + p.getLastUsername() + "&7 pour &a" + priceForPlayer + "$&7 !");
 			
+			Requests.savePlayer(player);
 			Requests.savePlayer(owner);
-			//getPlayer().closeInventory();
 		}
 		
 		getPlayer().closeInventory();
@@ -168,19 +165,15 @@ public class TopGUI extends AbstractInventory {
 		StandOffer offer = offersBySlots.get(slot);
 		
 		if(offer == null) {
-			System.out.println("OFFER IS NULL RETURNING");
 			return;
 		}
-		System.out.println("current amount : " + getInventory().getItem(slot).getAmount() + " slot=" + slot + ", type=" + offer.getItem().getType() + ", offer: " + offer.getAmount() + ", owner: " + offer.getOwner());
+		
 		if(getInventory().getItem(slot).getAmount() < offer.getAmount() || getInventory().getItem(slot).getDurability() == 14) {
 			totalStack++;
 			totalMoney += offer.getPrice() + taxe(offer.getPrice());
 			indicator(slot, true);
-			amounts.put(offer, getInventory().getItem(slot).getAmount());
+			amounts.put(offer, amounts.get(offer) == null ? getInventory().getItem(slot).getAmount() : amounts.get(offer) + 1);
 			updateBuyItem();
-			System.out.println("it's ok");
-		} else {
-			System.out.println("cannot add to cart !");
 		}
 		update();
 	}
@@ -193,22 +186,19 @@ public class TopGUI extends AbstractInventory {
 			totalStack--;
 			totalMoney-=offer.getPrice() + taxe(offer.getPrice());
 			indicator(slot, false);
-			if(totalStack <= 0) {
+			amounts.put(offer, amounts.get(offer) == null ? getInventory().getItem(slot).getAmount() : amounts.get(offer) - 1);
+			
+			if(amounts.get(offer) <= 0) {
 				amounts.remove(offer);
-			} else {
-				amounts.put(offer, getInventory().getItem(slot).getAmount());
 			}
+			
 			updateBuyItem();
-		} else {
-			System.out.println("cannot remove :x");
 		}
 		update();
 	}
 	
 	private void indicator(int slot, boolean increment) {
-		System.out.println("updating item at slot " + slot + " !");
 		ItemStack stack = getInventory().getItem(slot);
-		System.out.println("before: amount: " + stack.getAmount() + ", data: " + stack.getDurability());
 		
 		if(increment) {
 			if(stack.getDurability() == 13) {
@@ -223,14 +213,6 @@ public class TopGUI extends AbstractInventory {
 				stack.setDurability((short) 14);
 			}
 		}
-		
-		/*if(stack.getAmount() > 1) {
-			stack.setDurability((short) 13);
-		} else {
-			stack.setDurability((short) 14);
-		}*/
-		System.out.println("after: amount: " + stack.getAmount() + ", data: " + stack.getDurability());
-		//getInventory().setItem(slot, null);
 		getInventory().setItem(slot, stack);
 		update();
 	}
@@ -403,19 +385,18 @@ public class TopGUI extends AbstractInventory {
 	@Override
 	public boolean onClick(Player p, ItemStack clicked, ItemStack cursor, int slot, InventoryAction action,
 			ClickType clickType, SlotType slotType) {
-		System.out.println("Clicked !, item: " + clicked + ",,, slot=" + slot);
 		return true;
 	}
 
 	@Override
 	public void onClose(Player p) {
-		InventoryManager.removeGui(this);
+		//InventoryManager.removeGui(this);
 	}
 	
-	public void showBefore(Player p) {
-		setPlayer(p);
-		AbstractInventory before = InventoryManager.getGui(p.getOpenInventory().getTopInventory());
-		InventoryManager.getLoadingGui().show(p);
+	public void showBefore() {
+		Player p = getPlayer();
+		AbstractInventory back = InventoryManager.getGui(getPlayer().getOpenInventory().getTopInventory(), getPlayer());
+		InventoryManager.getLoadingGui(p).show();
 		loadTops(new Runnable() {
 			@Override
 			public void run() {
@@ -423,10 +404,10 @@ public class TopGUI extends AbstractInventory {
 				found = true;
 				
 				if(hasOffers) {
-					if(before != null) {
-						before.displayGui(TopGUI.this);
+					if(back != null) {
+						back.displayGui(TopGUI.this);
 					} else {
-						show(p);
+						show();
 					}
 				} else { 
 					p.closeInventory();
@@ -442,40 +423,6 @@ public class TopGUI extends AbstractInventory {
 				
 			}
 		}, 10);
-	}
-	
-	public boolean give(PlayerInventory inv, ItemStack item){
-		int maxStack = item.getMaxStackSize();
-		int neededPlace = (item.getAmount() / maxStack) + (item.getAmount() % maxStack == 0 ? 0 : 1);
-		int findedPlace = 0;
-
-		for(int i=0;i<inv.getSize();i++){
-			if(inv.getItem(i) == null){
-				findedPlace++;
-			}
-		}
-
-		int currentAmount = 0;
-		int neededAmount = item.getAmount();
-
-		if(findedPlace < neededPlace) return false;
-
-		for(int i=0;i<inv.getSize();i++){
-			if(currentAmount == neededAmount) break;
-			if(inv.getItem(i) == null){
-				int amount = maxStack;
-				if(currentAmount + amount > neededAmount){
-					amount = neededAmount - currentAmount;
-				}
-
-				currentAmount += amount;
-
-				ItemStack is = item.clone(); is.setAmount(amount);
-				inv.setItem(i, is);
-			}
-		}
-
-		return true;
 	}
 
 	private boolean canGiveAll() {

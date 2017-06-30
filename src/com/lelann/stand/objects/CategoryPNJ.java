@@ -8,6 +8,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
+import org.bukkit.entity.Villager.Profession;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 
@@ -31,7 +32,9 @@ public class CategoryPNJ extends StandObject {
 	
 	@Getter@Setter private String guiTitle;
 	@Getter@Setter private String identifier;
-	@Getter@Setter private Entity entity;
+	@Getter@Setter private Villager entity;
+	
+	@Getter@Setter private int professionId = 1;
 	
 	public CategoryPNJ(String identifier, String name, String guiTitle, Location loc, List<ItemStack> items){
 		this.name = name;
@@ -52,6 +55,7 @@ public class CategoryPNJ extends StandObject {
 		v.setCustomName(name);
 		v.setCustomNameVisible(true);
 		v.setRemoveWhenFarAway(false);
+		v.setProfession(Profession.getProfession(professionId));
 		
 		v.setMetadata("standPNJ", new FixedMetadataValue(StandPlugin.get(), ""));
 		
@@ -66,9 +70,42 @@ public class CategoryPNJ extends StandObject {
 		return v;
 	}
 	
+	public String locationToString() {
+		return getLocation().getBlockX() + " " 
+				+ getLocation().getBlockY() + " "
+				+ getLocation().getBlockZ();
+	}
+	
 	public void openGui(Player p) {
-		CategoryGUI gui = InventoryManager.getCategoryGui(this);
-		gui.show(p);
+		CategoryGUI gui = InventoryManager.getCategoryGui(p, this);
+		gui.show();
+	}
+
+	@SuppressWarnings("deprecation")
+	public int getColor() {
+		switch (getEntity().getProfession().getId()) {
+			case 0: return 12;
+			case 1: return 0;
+			case 2: return 10;
+			case 3: return 15;
+			case 4: return 8;
+	
+			default: return 0;
+		}
+	}
+
+	public void changeProfession() {
+		professionId++;
+		if(professionId >= Profession.values().length)
+			professionId = 0;
+		getEntity().setProfession(Profession.getProfession(professionId));
+	}
+
+	public void delete() {
+		StandPlugin.get().getManager().getPnjs().remove(getEntity().getUniqueId());
+		StandPlugin.get().getManager().savePnjs();
+		Categories.removeCategory(getIdentifier());
+		getEntity().remove();
 	}
 	
 }

@@ -137,12 +137,13 @@ public class StandPlugin extends JavaPlugin {
 		
 		System.out.println("Loading stands");
 				
-		String request = "SELECT uniqueId, standName, standRemove, loc, sOffers.id, type, data, itemstack, amount, price, owner  FROM sPlayers INNER JOIN sOffers ON sPlayers.uniqueId = sOffers.owner";
-
+		//String request = "SELECT uniqueId, standName, standRemove, loc, sOffers.id, type, data, itemstack, amount, price, owner  FROM sPlayers INNER JOIN sOffers ON sPlayers.uniqueId = sOffers.owner";
+		String request = "SELECT * FROM sPlayers";
+		
 		try {
 			ResultSet set = Main.getInstance().getDB().querySQL(request);
 			while(set.next()){
-				UUID uniqueId 	   = UUID.fromString(set.getString("uniqueId"));
+				UUID uniqueId = UUID.fromString(set.getString("uniqueId"));
 				StandPlayer player = null;
 
 				if(StandPlugin.this.players.containsKey(uniqueId)){
@@ -159,23 +160,20 @@ public class StandPlugin extends JavaPlugin {
 
 					StandPlugin.this.players.put(player.getUniqueId(), player);
 				}
-						
-				player.getOffers().add(new StandOffer(set));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		//TEST COMMIT
-		System.out.println("Finished loading stands");
-
+		
+		System.out.println(StandPlugin.this.players.size() + " players loaded !");
+		System.out.println(StandPlayer.allOffers.size() + " offers loaded !");
+		
 		new StandConfiguration(getConfig());
 		saveConfig();
 
-		//getServer().getPluginManager().registerEvents(new InventoryListener(), this);
 		getServer().getPluginManager().registerEvents(new GuiListener(), this);
 		getServer().getPluginManager().registerEvents(new CategoryPNJListener(), this);
 		getServer().getPluginManager().registerEvents(new StandListener(players), this);
-		//getServer().getPluginManager().registerEvents(new StandTopPNJManager(pnjs), this);
 		getServer().getPluginManager().registerEvents(new GeneralListener(), this);
 
 		new CommandsManager();

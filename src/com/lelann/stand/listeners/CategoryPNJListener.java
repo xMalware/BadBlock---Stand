@@ -10,6 +10,8 @@ import org.bukkit.event.world.ChunkLoadEvent;
 
 import com.lelann.stand.StandPlugin;
 import com.lelann.stand.abstracts.StandObject;
+import com.lelann.stand.inventories.CategoryGUI;
+import com.lelann.stand.inventories.abstracts.InventoryManager;
 import com.lelann.stand.objects.CategoryPNJ;
 
 /**
@@ -29,7 +31,12 @@ public class CategoryPNJListener extends StandObject implements Listener {
 		CategoryPNJ pnj = StandPlugin.get().getManager().getPnj(e.getRightClicked());
 		if(pnj == null) return;
 		
-		pnj.openGui(e.getPlayer());
+		if(e.getPlayer().isSneaking() && (e.getPlayer().isOp() || e.getPlayer().hasPermission("stand.admin.pnj.edit"))) {
+			CategoryGUI gui = InventoryManager.getCategoryGui(e.getPlayer(), pnj);
+			gui.openEdit(e.getPlayer());
+		} else {
+			pnj.openGui(e.getPlayer());
+		}
 	}
 	
 	@EventHandler
