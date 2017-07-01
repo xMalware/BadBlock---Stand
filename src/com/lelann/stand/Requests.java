@@ -16,6 +16,7 @@ import com.lelann.factions.database.Callback;
 import com.lelann.factions.database.Database;
 import com.lelann.stand.objects.StandOffer;
 import com.lelann.stand.objects.StandPlayer;
+import com.lelann.stand.objects.StandRequest;
 
 public class Requests {
 	public static Database getDB(){
@@ -31,6 +32,10 @@ public class Requests {
 		
 		for(StandOffer offer : player.getOffers()){
 			saveOffer(offer);
+		}
+		
+		for(StandRequest request : player.getRequests()) {
+			saveRequest(request);
 		}
 	}
 	
@@ -83,10 +88,10 @@ public class Requests {
 		return base;
 	}
 	
+	@Deprecated
 	public static void geteTop(final ItemStack item, final int limit, final boolean cheap, final Callback<List<StandOffer>> done){
 		
 		new Thread(){
-			@SuppressWarnings("deprecation")
 			@Override
 			public void run(){
 				Throwable t = null;
@@ -127,4 +132,56 @@ public class Requests {
 			}
 		}.start();
 	}
+
+	public static void getRequests(UUID uniqueId, Callback<List<StandRequest>> done) {
+		new Thread(){
+			@Override
+			public void run(){
+				Throwable t = null;
+				List<StandRequest> result = new ArrayList<StandRequest>();
+				
+				try {
+					String query = "SELECT * FROM sRequests WHERE owner='" + uniqueId + "'";
+					
+					ResultSet set = getDB().querySQL(query);
+					while(set.next()){
+						StandRequest request = new StandRequest(set);
+						result.add(request);
+					}
+				} catch (Throwable throwable) {
+					t = throwable;
+				}
+				
+				done.call(t, result);
+			}
+		}.start();
+	}
+
+	public static void saveRequest(StandRequest request) {
+		getDB().updateAsynchrounously(request.getSQLString());
+	}
+	
+	@SuppressWarnings("deprecation")
+	public static List<StandRequest> requests(ItemStack item) {
+		List<StandRequest> base = new ArrayList<>();
+		for(StandRequest request : StandPlayer.allRequests) {
+			if(request.getType() == item.getType() && request.getData() == item.getData().getData()) {
+				FactionPlayer owner = Main.getInstance().getPlayersManager().getPlayer(request.getOwner());
+				if(owner == null) continue;
+				base.add(request);
+			}
+		}
+		return base;
+	}
+	
+	public static void getTopRequests(ItemStack item, int limit, Callback<List<StandRequest>> done) {
+		List<StandRequest> requests = requests(item);
+		if(requests == null) done.call(new Throwable("Pas de demande pour cet item."), null);
+		List<StandRequest> base = requests(item);
+		base.sort(Comparator.comparing(StandRequest::getWantedPrice));
+		Collections.reverse(base);
+		base = base.subList(0, limit >= requests.size() ? requests.size() : limit);
+		done.call(null, base);
+	}
+	
 }

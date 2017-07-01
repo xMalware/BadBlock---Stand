@@ -101,6 +101,7 @@ public class StandPlugin extends JavaPlugin {
 		if(player == null){
 			players.put(p.getUniqueId(), new StandPlayer(p));
 		}
+		getPlayer(p).sendRequestMessages();
 	}
 
 	@Override
@@ -167,6 +168,7 @@ public class StandPlugin extends JavaPlugin {
 		
 		System.out.println(StandPlugin.this.players.size() + " players loaded !");
 		System.out.println(StandPlayer.allOffers.size() + " offers loaded !");
+		System.out.println(StandPlayer.allRequests.size() + " requests loaded !");
 		
 		new StandConfiguration(getConfig());
 		saveConfig();

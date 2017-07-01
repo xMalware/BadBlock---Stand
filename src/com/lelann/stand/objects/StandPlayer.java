@@ -2,7 +2,9 @@ package com.lelann.stand.objects;
 
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -20,6 +22,9 @@ import com.lelann.factions.Main;
 import com.lelann.factions.api.FactionPlayer;
 import com.lelann.factions.database.Callback;
 import com.lelann.factions.utils.ChatUtils;
+import com.lelann.factions.utils.JRawMessage;
+import com.lelann.factions.utils.JRawMessage.ClickEventType;
+import com.lelann.factions.utils.JRawMessage.HoverEventType;
 import com.lelann.stand.Requests;
 import com.lelann.stand.StandConfiguration;
 import com.lelann.stand.StandPlugin;
@@ -38,6 +43,7 @@ public class StandPlayer extends StandObject {
 	
 	@Getter@Setter private String standName;
 	private List<StandOffer> offers;
+	private List<StandRequest> requests;
 	
 	@Getter@Setter private StandAction action;
 	@Getter@Setter private Object actionCache;
@@ -46,6 +52,10 @@ public class StandPlayer extends StandObject {
 	@Getter@Setter private Location standLoc;
 	
 	public static List<StandOffer> allOffers = new ArrayList<>();
+	public static List<StandRequest> allRequests = new ArrayList<>();
+	
+	private List<StandRequest> completed = new ArrayList<>();
+	@Getter private Map<StandRequest, Integer> waiting = new HashMap<>();
 	
 	private boolean toCreate = false;
 	
@@ -53,6 +63,12 @@ public class StandPlayer extends StandObject {
 		if(offers == null)
 			offers = new ArrayList<>();
 		return offers;
+	}
+	
+	public List<StandRequest> getRequests(){
+		if(requests == null)
+			requests = new ArrayList<>();
+		return requests;
 	}
 	
 	public StandPlayer(Player player){
@@ -75,6 +91,29 @@ public class StandPlayer extends StandObject {
 		}
 		
 		loadOffers(syncLoad);
+		loadRequests(syncLoad);
+		
+		//LOADING ITEMS THAT HAS NOT BEEN REDEEM
+		//[{DIAMOND_BOOTS:0}=24,{STONE:5=12}]
+		String items = set.getString("requests");
+		if(items != null && !items.isEmpty() && items.length() > 0) {
+			items = items.replaceAll("{", "").replaceAll("}", "").replace("[", "").replace("]", "");
+			for(String parts : items.split(",")) {
+				String item = parts.split("=")[0];
+				String id = item.split(":")[0];
+				String data = item.split(":")[1];
+				String a = parts.split("=")[1];
+				
+				Material mat = Material.valueOf(id);
+				byte d = Byte.parseByte(data);
+				int amount = Integer.parseInt(a);
+				
+				ItemStack s = new ItemStack(mat, amount, d);
+				StandRequest request = getRequest(s);
+				
+				waiting.put(request, amount);
+			}
+		}
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -88,6 +127,72 @@ public class StandPlayer extends StandObject {
 		}
 		
 		return null;
+	}
+	
+	@SuppressWarnings("deprecation")
+	public StandRequest getRequest(ItemStack item){
+		Material type = item.getType();
+		byte data = item.getData().getData();
+		
+		for(StandRequest request : requests){
+			if(request.getData() == data && request.getType() == type)
+				return request;
+		}
+		
+		return null;
+	}
+	
+	public void addRequest(StandRequest request) {
+		getRequests().add(request);
+		allRequests.add(request);
+		Requests.saveRequest(request);
+	}
+	
+	public void removeRequest(StandRequest request) {
+		request.setWantedAmount(0);
+		Requests.saveRequest(request);
+		getRequests().remove(request);
+		allRequests.remove(request);
+		updateRequest(request);
+	}
+	
+	public void updateRequest(StandRequest request) {
+		if(request.getWantedAmount() <= 0)
+			completed.add(request);
+		else request.update();
+	}
+	
+	public void listRequests() {
+		sendMessage(header("Demandes"));
+		
+		for(StandRequest request : requests) {
+			String color = "&6";
+			if(request.getGived() == 0) color = "&c";
+			if(completed.contains(request)) color = "&a";
+			JRawMessage msg = new JRawMessage(color + "* &7" + request.getName() + " &8(" + color + request.completedPercent + "%&8)&f - ");	 
+			JRawMessage give = null;
+			if(waiting.get(request) != null && waiting.get(request) > 0) {
+				give = new JRawMessage("&3GET");
+				give.addClickEvent(ClickEventType.RUN_COMMAND, "/stand buy getitems " + request.getType() + ":" + request.getData(), false);
+				give.addHoverEvent(HoverEventType.SHOW_TEXT, "§7Obtenir les items qui vous ont été vendus", false);
+			}
+			JRawMessage delete = null;
+			if(!completed.contains(request)) {
+				delete = new JRawMessage("&cDEL");
+				delete.addClickEvent(ClickEventType.RUN_COMMAND, "/stand buy removerequest " + request.getType() + ":" + request.getData(), false);
+				delete.addHoverEvent(HoverEventType.SHOW_TEXT, "§7Supprime votre demande", false);
+			}
+			
+			if(give != null)
+				msg.add(give);
+			
+			if(delete != null)
+				msg.add(delete);
+			
+			msg.send(getPlayer());
+		}
+		
+		sendMessage(footer("Demandes"));
 	}
 	
 	public void addOffer(StandOffer offer) {
@@ -126,6 +231,32 @@ public class StandPlayer extends StandObject {
 		}
 		
 		offers.forEach(offer -> allOffers.add(offer));
+	}
+	
+	private void loadRequests(boolean syncLoad) {
+		requests = null;
+		
+		Requests.getRequests(uniqueId, new Callback<List<StandRequest>>() {
+			@Override
+			public void call(Throwable t, List<StandRequest> result) {
+				if(t == null){
+					requests = result;
+					//System.out.println("Loaded " + result.size() + " offers for player " + uniqueId);
+				} else {
+					requests = new ArrayList<StandRequest>();
+				}
+			}
+		});
+		
+		if(syncLoad) {
+			while(requests == null) {
+				try {
+					Thread.sleep(3L);
+				} catch (InterruptedException unused){}
+			}
+		}
+		
+		requests.forEach(request -> allRequests.add(request));
 	}
 	
 	public boolean hasEnough(int money) {
@@ -319,6 +450,12 @@ public class StandPlayer extends StandObject {
 		else return 0;
 	}
 	
+	public int getMaxRequestNumber() {
+		if(isValid())
+			return StandConfiguration.getInstance().allowedRequestNumber(getPlayer());
+		else return 0;
+	}
+	
 	public Player getPlayer(){
 		return getServer().getPlayer(uniqueId);
 	}
@@ -335,13 +472,41 @@ public class StandPlayer extends StandObject {
 		
 		if(toCreate){
 			toCreate = false;
-			result = "INSERT INTO sPlayers(uniqueId, standName, standRemove, loc) VALUES('" + uniqueId + "'"
-					+ ", '" + standName.replace("'", "\\'") + "', " + standRemove + ", " + loc + ")";
+			result = "INSERT INTO sPlayers(uniqueId, standName, standRemove, loc, requests) VALUES('" + uniqueId + "'"
+					+ ", '" + standName.replace("'", "\\'") + "', " + standRemove + ", " + loc + ", '" + requestsToString() + "')";
 		} else {
-			result = "UPDATE sPlayers SET standName='" + standName.replace("'", "\\'") + "', standRemove=" + standRemove + ", loc=" + loc + " WHERE uniqueId='" + uniqueId + "'";
+			result = "UPDATE sPlayers SET standName='" + standName.replace("'", "\\'") + "', standRemove=" + standRemove + ", loc=" + loc + ", requests='" + requestsToString() + "' WHERE uniqueId='" + uniqueId + "'";
 		}
 		
 		return result;
+	}
+	
+	private String requestsToString() {
+		//[{DIAMOND_BOOTS:0}=24,{STONE:5=12}]
+		String base = "[";
+		for(StandRequest request : waiting.keySet()) {
+			base+= "{" + request.getType() + ":" + request.getData() + "}=" + waiting.get(request) + ",";
+		}
+		base = base.substring(0, base.length()-1);
+		base+="]";
+		return base;
+	}
+	
+	private List<JRawMessage> offline = new ArrayList<>();
+	
+	public void addRequestMsg(JRawMessage messsage) {
+		offline.add(messsage);
+	}
+	
+	public void sendRequestMessages() {
+		offline.forEach(msg -> msg.send(getPlayer()));
+	}
+
+	public boolean hasRequestedSame(StandRequest r) {
+		for(StandRequest request : requests) {
+			if(request.getType() == r.getType() && request.getData() == r.getData()) return true;
+		}
+		return false;
 	}
 	
 	public enum StandAction {

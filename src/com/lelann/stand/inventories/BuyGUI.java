@@ -119,6 +119,10 @@ public class BuyGUI extends AbstractInventory {
 		viewer.remove(pricePlayer);
 		owner.add(priceOwner);
 		
+		offer.remove(quantity);
+		if(offer.getAmount() <= 0)
+			owner.removeOffer(offer);
+		
 		if(owner != null) {
 			owner.sendMessage(PREFIX + "Vous venez de vendre &a" + quantity + " " + offer.getName() + "&7 à &a" + viewer.getPlayer().getName() + "&7 pour &a" + priceOwner + "$&7 !");
 		}
@@ -136,7 +140,7 @@ public class BuyGUI extends AbstractInventory {
 	}
 	
 	private void setupItem() {
-		ItemStack concerned = offer.createItemStack("&7Acheter &b" + quantity + "&7 unité" + (quantity > 1 ? "s" : ""), "&7Cliquez pour acheter &b" + quantity + " " + offer.getName(), "&7en la quantité voulue !", "", "&7Coût: " + offer.getPrice() * quantity);
+		ItemStack concerned = offer.createItemStack("&7Acheter &b" + quantity + "&7 unité" + (quantity > 1 ? "s" : ""), "&7Cliquez pour acheter &b" + quantity + " " + offer.getName(), "&7en la quantité voulue !", "", "&7Coût: &b" + offer.getPrice() * quantity, "&7Taxe:&b " + taxe(offer.getPrice() * quantity));
 		concerned.setAmount(quantity);
 		
 		ClickableItem item = new ClickableItem(concerned, null);
@@ -144,7 +148,7 @@ public class BuyGUI extends AbstractInventory {
 	}
 	
 	private void updateItem() {
-		ItemStack concerned = offer.createItemStack("&7Acheter &b" + quantity + "&7 unité" + (quantity > 1 ? "s" : ""), "&7Cliquez pour acheter &b" + quantity + " " + offer.getName(), "&7en la quantité voulue !", "", "&7Coût: " + offer.getPrice() * quantity);
+		ItemStack concerned = offer.createItemStack("&7Acheter &b" + quantity + "&7 unité" + (quantity > 1 ? "s" : ""), "&7Cliquez pour acheter &b" + quantity + " " + offer.getName(), "&7en la quantité voulue !", "", "&7Coût: " + offer.getPrice() * quantity, "&7Taxe:&b " + taxe(offer.getPrice() * quantity));
 		concerned.setAmount(quantity);
 		getInventory().setItem(13, concerned);
 	}

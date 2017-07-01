@@ -51,6 +51,7 @@ public class CommandsManager {
 		
 		addCommand(new See());
 		addCommand(new Add());
+		addCommand(new Buy(), "b");
 		addCommand(new Pnj());
 		
 		addCommand(new Help(), "h", "aide");
