@@ -14,6 +14,7 @@ import org.bukkit.metadata.FixedMetadataValue;
 
 import com.lelann.stand.StandPlugin;
 import com.lelann.stand.abstracts.StandObject;
+import com.lelann.stand.inventories.APTopGUI;
 import com.lelann.stand.inventories.CategoryGUI;
 import com.lelann.stand.inventories.abstracts.Categories;
 import com.lelann.stand.inventories.abstracts.InventoryManager;
@@ -24,29 +25,25 @@ import net.minecraft.server.v1_8_R3.AttributeInstance;
 import net.minecraft.server.v1_8_R3.EntityInsentient;
 import net.minecraft.server.v1_8_R3.GenericAttributes;
 
-public class CategoryPNJ extends StandObject {
+public class ApPNJ extends StandObject {
 
 	@Getter@Setter private String name;
-	@Getter@Setter private ItemStack[] items;
 	@Getter@Setter private Location location;
 	
 	@Getter@Setter private String guiTitle;
-	@Getter@Setter private String identifier;
 	@Getter@Setter private Villager entity;
 	
-	@Getter@Setter private int professionId = 1;
+	@Getter@Setter private int professionId = 2;
 	
-	public CategoryPNJ(String identifier, String name, String guiTitle, Location loc, List<ItemStack> items, int professionId){
+	public ApPNJ(String name, String guiTitle, Location loc, int professionId){
 		this.name = name;
 		this.location = loc;
-		this.items = items.toArray(new ItemStack[items.size()]);
 		this.guiTitle = guiTitle;
-		this.identifier = identifier;
 		this.professionId = professionId;
 	}
 	
 	public void save() {
-		Categories.saveCategory(identifier, name, guiTitle, location, items, professionId);
+		Categories.saveApPnj(name, guiTitle, location, professionId);
 	}
 
 	public Entity createEntity(){
@@ -78,8 +75,8 @@ public class CategoryPNJ extends StandObject {
 	}
 	
 	public void openGui(Player p) {
-		CategoryGUI gui = InventoryManager.getCategoryGui(p, this);
-		gui.show();
+		APTopGUI gui = InventoryManager.getApGui(p);
+		gui.showBefore();
 	}
 
 	@SuppressWarnings("deprecation")
@@ -105,7 +102,7 @@ public class CategoryPNJ extends StandObject {
 	public void delete() {
 		StandPlugin.get().getManager().getPnjs().remove(getEntity().getUniqueId());
 		StandPlugin.get().getManager().savePnjs();
-		Categories.removeCategory(getIdentifier());
+		Categories.removeApPnj();
 		getEntity().remove();
 	}
 	

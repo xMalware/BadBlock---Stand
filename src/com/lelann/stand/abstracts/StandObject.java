@@ -11,12 +11,14 @@ import org.bukkit.event.entity.EntityEvent;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.projectiles.ProjectileSource;
 
+import com.lelann.factions.utils.ChatUtils;
 import com.lelann.stand.StandPlugin;
 import com.lelann.stand.objects.StandPlayer;
 
 public abstract class StandObject {
 	
 	public static final String PREFIX = "%darkaqua%[%aqua%Stand%darkaqua%]&7 ";
+	public static final String PREFIX_FACTION = "%darkaqua%[%aqua%Factions%darkaqua%] ";
 	
 	public String header(String what) {
 		return "&8&l«&b&l-&8&l»&m----------&8&l«&b&l-&8&l»&b " + what + " &8&l«&b&l-&8&l»&m----------&f&8&l«&b&l-&8&l»&b";
@@ -67,4 +69,9 @@ public abstract class StandObject {
 	public StandPlayer getPlayer(EntityEvent e){
 		return getPlayer(e.getEntity());
 	}
+	
+	public void sendFMessage(CommandSender sender, String message) {
+		ChatUtils.sendMessage(sender, PREFIX_FACTION + message);
+	}
+	
 }

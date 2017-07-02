@@ -35,11 +35,13 @@ public abstract class AbstractCommand extends StandObject {
 		}
 	}
 	
-	public void sendHelp(CommandSender sender){
-		if(sender instanceof Player){
-			for(JRawMessage message : messages)
-				message.send((Player) sender);
-		} else ChatUtils.sendMessage(sender, messageConsole);
+	public void sendHelp(CommandSender sender) {
+		if(messages != null && messages.length > 0) {
+			if(sender instanceof Player){
+				for(JRawMessage message : messages)
+					message.send((Player) sender);
+			} else ChatUtils.sendMessage(sender, messageConsole);
+		}
 	}
 	
 	protected void sendMessage(CommandSender sender, String msg){
@@ -48,6 +50,11 @@ public abstract class AbstractCommand extends StandObject {
 	
 	protected void broadcast(String msg){
 		ChatUtils.broadcast(PREFIX + msg);
+	}
+	
+	public AbstractCommand(String name, String permission) {
+		this.name = name;
+		this.permission = permission;
 	}
 	
 	public AbstractCommand(String name, String permission, String description, String hover, String onClickShow, String onClickRun){

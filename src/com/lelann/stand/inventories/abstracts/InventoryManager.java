@@ -11,9 +11,11 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import com.lelann.stand.inventories.APTopGUI;
 import com.lelann.stand.inventories.CategoryGUI;
 import com.lelann.stand.inventories.LoadingGUI;
 import com.lelann.stand.inventories.abstracts.AbstractInventory.ItemAction;
+import com.lelann.stand.objects.ApPNJ;
 import com.lelann.stand.objects.CategoryPNJ;
 
 public class InventoryManager {
@@ -44,6 +46,7 @@ public class InventoryManager {
 	}
 
 	public static void registerItem(AbstractInventory gui, ItemStack item, ItemAction action) {
+		if(clickables.get(gui) == null) clickables.put(gui, new ArrayList<>());
 		ClickableItem clickable = new ClickableItem(item, action);
 		List<ClickableItem> items = clickables.get(gui);
 		items.add(clickable);
@@ -61,6 +64,7 @@ public class InventoryManager {
 	}
 	
 	public static void registerItem(AbstractInventory gui, ClickableItem item) {
+		if(clickables.get(gui) == null) clickables.put(gui, new ArrayList<>());
 		List<ClickableItem> items = clickables.get(gui);
 		items.add(item);
 		clickables.put(gui, items);
@@ -106,6 +110,10 @@ public class InventoryManager {
 			clickables.put(gui, restorabelsClickables.get(gui));
 			restorabelsClickables.remove(gui);
 		}
+	}
+
+	public static APTopGUI getApGui(Player p) {
+		return new APTopGUI(p);
 	}
 	
 }

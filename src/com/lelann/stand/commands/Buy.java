@@ -73,6 +73,10 @@ public class Buy extends AbstractCommand {
 			sendMessage(sender, "&7Vous avez obtenu vos items !");
 			
 			player.getWaiting().remove(request);
+			if(player.getCompleted().contains(request)) {
+				player.deleteRequest(request);
+			}
+			
 			
 			return;
 		}
@@ -90,7 +94,7 @@ public class Buy extends AbstractCommand {
 			StandRequest request = player.getRequest(new ItemStack(type, 1, data));
 			if(request == null) return;
 			
-			player.removeRequest(request);
+			player.deleteRequest(request);
 			sendMessage(sender, "&7Demande supprimée !");
 			
 			return;
@@ -141,7 +145,7 @@ public class Buy extends AbstractCommand {
 				return;
 			}
 			
-			ItemStack wanted = p.getItemInHand();
+			ItemStack wanted = p.getItemInHand().clone();
 			wanted.setAmount(1);
 			
 			StandRequest newRequest = new StandRequest(player.getUniqueId(), wanted, price, amount);

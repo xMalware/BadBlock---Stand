@@ -27,7 +27,7 @@ public class StandRequest extends StandObject {
 	@Getter@Setter private byte data;
 	@Getter@Setter JObject serializable;
 	@Getter@Setter UUID owner;
-	public int completedPercent = 0;
+	public double completedPercent = 0;
 
 	private boolean toCreate = false;
 	
@@ -88,6 +88,7 @@ public class StandRequest extends StandObject {
 	public void remove(int amount){
 		this.wantedAmount -= amount;
 		this.gived += amount;
+		update();
 	}
 
 	public String getSQLString(){
@@ -117,7 +118,7 @@ public class StandRequest extends StandObject {
 	}
 	
 	public void update() {
-		this.completedPercent = (int) MathsUtils.round(this.gived / this.initialAmount, 0);
+		this.completedPercent = MathsUtils.round(((double) this.gived / (double) this.initialAmount) * 100.0, 0);
 	}
 	
 }

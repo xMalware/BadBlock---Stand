@@ -38,24 +38,27 @@ public class Categories {
 		}
 		
 		for(String id : cs.getKeys(false)) {
+			if(id.equalsIgnoreCase("ap")) continue;
 			ConfigurationSection current = cs.getConfigurationSection(id);
 			String name = current.getString("Name");
 			String title = current.getString("InventoryTitle");
+			int professionId = current.getInt("Profession");
 			Location loc = ConfigUtils.locationFromConfig(current);
 			List<ItemStack> items = ItemUtils.getItemsFromStrings(current.getStringList("Items"));
-			temp.add(new CategoryPNJ(id, name, title, loc, items));
+			temp.add(new CategoryPNJ(id, name, title, loc, items, professionId));
 		}
 		
 		return temp;
 	}
 	
-	public static void saveCategory(String identifier, String name, String title, Location loc, ItemStack[] items) {
+	public static void saveCategory(String identifier, String name, String title, Location loc, ItemStack[] items, int professionId) {
 		configuration.set("Pnjs." + identifier, null);
 		String path = "Pnjs." + identifier;
 		//ConfigurationSection current = configuration.getConfigurationSection(path);
 		
 		configuration.set(path + ".Name", name);
 		configuration.set(path + ".InventoryTitle", title);
+		configuration.set(path + ".Profession", professionId);
 		ConfigUtils.itemsToConfig(configuration, path, items);
 		ConfigUtils.locationToConfig(configuration, path, loc);
 		
@@ -69,7 +72,6 @@ public class Categories {
 	
 	private static void save() {
 		try {
-			System.out.println("saving config");
 			configuration.save(config);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -84,6 +86,24 @@ public class Categories {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static void saveApPnj(String name, String title, Location location, int professionId) {
+		configuration.set("Pnjs.AP", null);
+		String path = "Pnjs.AP";
+		//ConfigurationSection current = configuration.getConfigurationSection(path);
+		
+		configuration.set(path + ".Name", name);
+		configuration.set(path + ".InventoryTitle", title);
+		configuration.set(path + ".Profession", professionId);
+		ConfigUtils.locationToConfig(configuration, path, location);
+		
+		save();
+	}
+
+	public static void removeApPnj() {
+		configuration.set("Pnjs.AP", null);
+		save();
 	}
 	
 }

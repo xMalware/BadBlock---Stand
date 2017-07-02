@@ -33,8 +33,6 @@ import lombok.Setter;
  */
 
 public abstract class AbstractInventory extends StandObject {
-
-	private HashMap<String, List<AbstractInventory>> backs = new HashMap<>();
 	
 	@Getter@Setter
 	private String title;
@@ -76,6 +74,10 @@ public abstract class AbstractInventory extends StandObject {
 	
 	protected void build() {
 		this.gui = Bukkit.createInventory(null, this.size, ChatUtils.colorReplace(this.title));
+	}
+	
+	public void sendFMessage(String message) {
+		ChatUtils.sendMessage(getPlayer(), PREFIX_FACTION + message);
 	}
 	
 	public void defaultSeparator() {
@@ -233,15 +235,12 @@ public abstract class AbstractInventory extends StandObject {
 		else {
 			for(List<ClickableItem> clickables : InventoryManager.clickables.values()) {
 				for(ClickableItem clickable : clickables) {
-					//System.out.println("comparing " + clickable.getItem().getType() + " with " + item.getType() + " ..");
 					if(clickable.getItem().isSimilar(item)) {
 						items.put(item, clickable);
-						System.out.println("founded item clickable");
 						return clickable;
 					}
 				}
 			}
-			System.out.println("not found item clickable :c");
 			return null;
 		}
 	}
@@ -252,14 +251,14 @@ public abstract class AbstractInventory extends StandObject {
 	
 	public ClickableItem getClickable(int slot) {
 		ItemStack stack = getInventory().getItem(slot);
-		if(stack == null) { System.out.println("item is null at slot " + slot); return null; }
+		if(stack == null) { return null; }
 		return getItem(slot);
 	}
 	
 	public ClickableItem getBarClickable(int slot) {
 		slot = (size-9) + slot;
 		ItemStack stack = getInventory().getItem(slot);
-		if(stack == null) { System.out.println("item is null at slot " + slot); return null; }
+		if(stack == null) { return null; }
 		return getItem(stack);
 	}
 	
@@ -268,8 +267,7 @@ public abstract class AbstractInventory extends StandObject {
 	}
 	
 	public void update() {
-		//System.out.println("updating inv");
-		//Packets.updateInventory(getPlayer(), getInventory());
+		//USELESS
 	}
 	
 	public ItemStack[] getContents(int lines) {
@@ -314,6 +312,10 @@ public abstract class AbstractInventory extends StandObject {
 		}
 
 		return true;
+	}
+	
+	public void run(Runnable cb) {
+		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(getPlugin(), cb, 1L);
 	}
 	
 	public abstract boolean onClick(Player p, ItemStack clicked, ItemStack cursor, int slot, InventoryAction action, ClickType clickType, SlotType slotType);

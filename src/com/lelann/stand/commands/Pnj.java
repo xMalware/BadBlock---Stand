@@ -11,7 +11,7 @@ import com.lelann.factions.utils.StringUtils;
 import com.lelann.stand.StandPlugin;
 import com.lelann.stand.inventories.CategoryGUI;
 import com.lelann.stand.inventories.abstracts.InventoryManager;
-import com.lelann.stand.listeners.CategoryPNJManager;
+import com.lelann.stand.objects.ApPNJ;
 import com.lelann.stand.objects.CategoryPNJ;
 import com.lelann.stand.objects.StandPlayer;
 
@@ -88,7 +88,14 @@ public class Pnj extends AbstractCommand {
 				return;
 			}
 			
-			StandPlugin.get().getManager().add(new CategoryPNJ(identifier, "Mon beau pnj", "Titre de l'inventaire", player.getLocation(), Arrays.asList(new ItemStack[9*5])));
+			if(identifier.equalsIgnoreCase("ap" )) {
+				StandPlugin.get().getManager().add(new ApPNJ("APs", "Titre de l'inventaire", player.getLocation(), 2));
+				StandPlugin.get().getManager().reload();
+				StandPlugin.get().getManager().savePnjs();
+				return;
+			}
+			
+			StandPlugin.get().getManager().add(new CategoryPNJ(identifier, "Mon beau pnj", "Titre de l'inventaire", player.getLocation(), Arrays.asList(new ItemStack[9*5]), 1));
 			StandPlugin.get().getManager().reload();
 			StandPlugin.get().getManager().savePnjs();
 			

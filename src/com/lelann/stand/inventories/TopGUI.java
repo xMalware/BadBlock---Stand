@@ -187,7 +187,7 @@ public class TopGUI extends AbstractInventory {
 			
 		}
 		
-		
+		regenerate();
 		
 	}
 	
@@ -249,7 +249,7 @@ public class TopGUI extends AbstractInventory {
 			Requests.savePlayer(owner);
 		}
 		
-		getPlayer().closeInventory();
+		regenerate();
 		
 	}
 	
@@ -403,9 +403,7 @@ public class TopGUI extends AbstractInventory {
 			
 			@Override
 			public void call(Throwable t, List<StandOffer> result) {
-				if(t != null ) { t.printStackTrace(); return; } 
-				
-				if(result.size() == 0) { 
+				if(t != null || result == null || result.size() == 0) { 
 					hasOffers = false; 
 					Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(StandPlugin.get(), callBack, 1L); 
 					return;
@@ -444,7 +442,6 @@ public class TopGUI extends AbstractInventory {
 						
 						@Override
 						public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
-							System.out.println("CLCIKED ADD/REMOVE TO CART !!!");
 							if(action == InventoryAction.PICKUP_HALF) { //Clic droit
 								removeItemFromCart(true, slot);
 							} else {
@@ -479,7 +476,7 @@ public class TopGUI extends AbstractInventory {
 		Requests.getTopRequests(item, 4, new Callback<List<StandRequest>>() {
 			@Override
 			public void call(Throwable t, List<StandRequest> requests) {
-				if(t != null || requests == null) {
+				if(t != null || requests == null || requests.size() == 0) {
 					hasRequests = false;
 					Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(StandPlugin.get(), callBack, 1L);
 					return;
@@ -487,7 +484,6 @@ public class TopGUI extends AbstractInventory {
 				
 				int printIndex = 0;
 				for(int index = 0; index < requests.size(); index++) {
-					System.out.println("printing request !");
 					if(!printRequest(printIndex, requests.get(index))) {
 						if(printIndex > 0)
 							printIndex--;
@@ -503,8 +499,6 @@ public class TopGUI extends AbstractInventory {
 	
 	private boolean printRequest(int printIndex, StandRequest request) {
 		FactionPlayer owner = Main.getInstance().getPlayersManager().getPlayer(request.getOwner());
-		
-		System.out.println("details: type->" + request.getType() + ", data->" + request.getData() + ", wanted->" + request.getWantedAmount());
 		
 		String name = "???";
 		
@@ -582,6 +576,12 @@ public class TopGUI extends AbstractInventory {
 				
 				found = true;
 				
+				if(!hasOffers && !hasRequests) {
+					goBack();
+					ChatUtils.sendMessage(p, "&cAucune offre ni demande n'ont été trouvées pour cet item :c");
+					return;
+				}
+				
 				if(hasOffers || hasRequests) {
 					if(back != null) {
 						back.displayGui(TopGUI.this);
@@ -589,7 +589,7 @@ public class TopGUI extends AbstractInventory {
 						show();
 					}
 				} else { 
-					p.closeInventory();
+					goBack();
 					ChatUtils.sendMessage(p, "&cAucune offre ni demande n'ont été trouvées pour cet item :c");
 				}
 			}
@@ -667,10 +667,32 @@ public class TopGUI extends AbstractInventory {
 						count -= is.getAmount();
 						is = null;
 					}
-					inv.setItem(i, null);
+					inv.setItem(i, is);
 				}
 			}
 		}
+	}
+	
+	public void regenerate() {
+		
+		hasOffers = true;
+		hasRequests = true;
+		
+		totalMoney = 0;
+		totalStack = 0;
+		
+		totalMoneySell = 0;
+		totalSell = 0;
+
+		amounts = new HashMap<>();
+		offersBySlots = new HashMap<>();
+		
+		requestAmounts = new HashMap<>();
+		requestsBySlots = new HashMap<>();
+		
+		goBack();
+		InventoryManager.restore(this);
+		showBefore();
 	}
 	
 }

@@ -7,14 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.util.EulerAngle;
 
@@ -54,7 +51,7 @@ public class StandPlayer extends StandObject {
 	public static List<StandOffer> allOffers = new ArrayList<>();
 	public static List<StandRequest> allRequests = new ArrayList<>();
 	
-	private List<StandRequest> completed = new ArrayList<>();
+	@Getter private List<StandRequest> completed = new ArrayList<>();
 	@Getter private Map<StandRequest, Integer> waiting = new HashMap<>();
 	
 	private boolean toCreate = false;
@@ -97,23 +94,25 @@ public class StandPlayer extends StandObject {
 		//[{DIAMOND_BOOTS:0}=24,{STONE:5=12}]
 		String items = set.getString("requests");
 		if(items != null && !items.isEmpty() && items.length() > 0) {
-			items = items.replaceAll("{", "").replaceAll("}", "").replace("[", "").replace("]", "");
-			for(String parts : items.split(",")) {
-				String item = parts.split("=")[0];
-				String id = item.split(":")[0];
-				String data = item.split(":")[1];
-				String a = parts.split("=")[1];
-				
-				Material mat = Material.valueOf(id);
-				byte d = Byte.parseByte(data);
-				int amount = Integer.parseInt(a);
-				
-				ItemStack s = new ItemStack(mat, amount, d);
-				StandRequest request = getRequest(s);
-				
-				waiting.put(request, amount);
-			}
+			items = items.replaceAll("\\{", "").replaceAll("\\}", "").replaceAll("\\[", "").replaceAll("\\]", "");
+			if(items.contains(","))
+				for(String parts : items.split(",")) {
+					String item = parts.split("=")[0];
+					String id = item.split(":")[0];
+					String data = item.split(":")[1];
+					String a = parts.split("=")[1];
+					
+					Material mat = Material.valueOf(id);
+					byte d = Byte.parseByte(data);
+					int amount = Integer.parseInt(a);
+					
+					ItemStack s = new ItemStack(mat, amount, d);
+					StandRequest request = getRequest(s);
+					
+					waiting.put(request, amount);
+				}
 		}
+		toCreate = false;
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -149,11 +148,20 @@ public class StandPlayer extends StandObject {
 	}
 	
 	public void removeRequest(StandRequest request) {
+//		if(!completed.contains(request)) completed.add(request);
 		request.setWantedAmount(0);
-		Requests.saveRequest(request);
+		//Requests.saveRequest(request);
+		//getRequests().remove(request);
+		//allRequests.remove(request);
+		updateRequest(request);
+	}
+	
+	public void deleteRequest(StandRequest request) {
+		request.setWantedAmount(0);
 		getRequests().remove(request);
 		allRequests.remove(request);
-		updateRequest(request);
+		waiting.remove(request);
+		Requests.saveRequest(request);
 	}
 	
 	public void updateRequest(StandRequest request) {
@@ -361,89 +369,6 @@ public class StandPlayer extends StandObject {
 		}
 	}
 	
-	@Deprecated
-	public void openeStand(Player to){
-		int size = getOffers().size();
-		size += size % 9 == 0 ? 0 : 9 - (size % 9);
-		
-		if(size == 0){
-			ChatUtils.sendMessage(to, "&cCe joueur n'a aucune offre à vendre."); return;
-		}
-		
-		/*if(size > 45) {
-			//Plus de 6 lignes
-			ChatUtils.sendMessage(to, "&cLe stand de ce joueur n'est pas disponible"); return;
-		}*/
-		
-		
-		
-		boolean canModify = uniqueId.equals(to.getUniqueId()) || to.hasPermission("stand.admin.modify");
-		
-		Inventory inv = Bukkit.createInventory(null, size, ChatUtils.colorReplace(getStandName()));
-		for(int i=0;i<getOffers().size();i++){
-			StandOffer offer = getOffers().get(i);
-			inv.setItem(i, offer.createItemStack("&cVente à &a" + offer.getPrice() + "$ &cl'unité"
-					, "&4> &aClique gauche pour acheter"
-					, canModify ? "&4> &cClique droit pour supprimer l'offre" : ""));
-		}
-		
-		StandPlayer player = getPlayer(to);
-		
-		to.openInventory(inv);
-		
-		player.setAction(StandAction.LOOKING_STAND);
-		player.setActionCache(this);
-	}
-	
-	public void buyOffer(StandPlayer to, StandOffer offer){
-		int half = offer.getAmount() / 2;
-		int amount = offer.getAmount();
-		
-		List<Integer> quant = add(half, amount, 1, 8, 16, 32, 64);
-		Inventory inv = Bukkit.createInventory(null, 9, ChatUtils.colorReplace("&cChoisissez la quantité :"));
-		
-		for(int i=0;i<quant.size();i++){
-			int quantity = quant.get(i);
-			ItemStack item = offer.createItemStack("&cAcheter x" + quantity,
-					"&4> &cAcheter x" + quantity + " cet item pour &a" + (quantity * offer.getPrice()) + "$");
-			item.setAmount(quantity);
-			inv.setItem(i, item);
-		}
-		
-		ItemStack item = new ItemStack(Material.DARK_OAK_DOOR_ITEM, 1);
-		ItemMeta meta = item.getItemMeta();
-		meta.setDisplayName(ChatUtils.colorReplace("&aCliquez pour revenir au Stand '" + standName + "'"));
-		item.setItemMeta(meta);
-		
-		inv.setItem(8, item);
-		
-		to.getPlayer().openInventory(inv);
-		
-		to.setAction(StandAction.BUYING_OFFER);
-		to.setActionCache(offer);
-	}
-	
-	public static List<Integer> add(int half, int amount, int... quant){
-		List<Integer> result = new ArrayList<Integer>();
-		half = half == 0 ? -1 : half;
-		for(int i=0;i<quant.length;i++){
-			int nbr = quant[i];
-			if(nbr >= half && half != -1){
-				result.add(half); half = -1; continue;
-			}
-			if(nbr >= amount){
-				result.add(amount); amount = -1; break;
-			}
-			
-			result.add(nbr);
-		}
-		
-		if(half != -1) result.add(half);
-		if(amount != -1) result.add(amount);
-		
-		return result;
-	}
-	
 	public int getMaxOfferNumber(){
 		if(isValid())
 			return StandConfiguration.getInstance().allowedOfferNumber(getPlayer());
@@ -470,7 +395,7 @@ public class StandPlayer extends StandObject {
 		
 		String result = "";
 		
-		if(toCreate){
+		if(toCreate) {
 			toCreate = false;
 			result = "INSERT INTO sPlayers(uniqueId, standName, standRemove, loc, requests) VALUES('" + uniqueId + "'"
 					+ ", '" + standName.replace("'", "\\'") + "', " + standRemove + ", " + loc + ", '" + requestsToString() + "')";
@@ -483,12 +408,16 @@ public class StandPlayer extends StandObject {
 	
 	private String requestsToString() {
 		//[{DIAMOND_BOOTS:0}=24,{STONE:5=12}]
+		if(waiting.keySet().size() == 0) return "";
 		String base = "[";
 		for(StandRequest request : waiting.keySet()) {
+			if(waiting.get(request) == null) continue;
+			if(request == null) continue;
 			base+= "{" + request.getType() + ":" + request.getData() + "}=" + waiting.get(request) + ",";
 		}
 		base = base.substring(0, base.length()-1);
 		base+="]";
+		if(base.length() <= 1 || base.equals("]")) return "";
 		return base;
 	}
 	

@@ -11,9 +11,12 @@ import java.util.UUID;
 import org.bukkit.inventory.ItemStack;
 
 import com.lelann.factions.Main;
+import com.lelann.factions.api.Faction;
 import com.lelann.factions.api.FactionPlayer;
 import com.lelann.factions.database.Callback;
 import com.lelann.factions.database.Database;
+import com.lelann.stand.objects.APOffer;
+import com.lelann.stand.objects.StandFaction;
 import com.lelann.stand.objects.StandOffer;
 import com.lelann.stand.objects.StandPlayer;
 import com.lelann.stand.objects.StandRequest;
@@ -24,6 +27,10 @@ public class Requests {
 	}
 	
 	public static void saveOffer(final StandOffer offer){
+		getDB().updateAsynchrounously(offer.getSQLString());
+	}
+	
+	public static void saveAPOffer(final APOffer offer){
 		getDB().updateAsynchrounously(offer.getSQLString());
 	}
 	
@@ -167,6 +174,8 @@ public class Requests {
 		for(StandRequest request : StandPlayer.allRequests) {
 			if(request.getType() == item.getType() && request.getData() == item.getData().getData()) {
 				FactionPlayer owner = Main.getInstance().getPlayersManager().getPlayer(request.getOwner());
+				StandPlayer player = request.getPlayer(request.getOwner());
+				if(player.getCompleted().contains(request)) continue;
 				if(owner == null) continue;
 				base.add(request);
 			}
@@ -182,6 +191,54 @@ public class Requests {
 		Collections.reverse(base);
 		base = base.subList(0, limit >= requests.size() ? requests.size() : limit);
 		done.call(null, base);
+	}
+	
+	public static void getAPOffers(final Faction owner, final Callback<List<APOffer>> done){
+		new Thread(){
+			@Override
+			public void run(){
+				Throwable t = null;
+				List<APOffer> result = new ArrayList<APOffer>();
+				
+				try {
+					String request = "SELECT * FROM sAPOffers WHERE owner='" + owner.getFactionId() + "'";
+					
+					ResultSet set = getDB().querySQL(request);
+					while(set.next()){
+						APOffer offer = new APOffer(set);
+						result.add(offer);
+					}
+				} catch (Throwable throwable) {
+					t = throwable;
+				}
+				
+				done.call(t, result);
+			}
+		}.start();
+	}
+	
+	public static List<APOffer> aps() {
+		List<APOffer> base = new ArrayList<>();
+		for(APOffer apOffer : StandFaction.allOffers) {
+			base.add(apOffer);
+		}
+		return base;
+	}
+	
+	public static void getAPsOnSale(int limit, Callback<List<APOffer>> done) {
+		List<APOffer> aps = aps();
+		if(aps == null) done.call(new Throwable("Pas de vente d'APs."), null);
+		List<APOffer> base = aps();
+		base.sort(Comparator.comparing(APOffer::getPrice));
+		base = base.subList(0, limit >= aps.size() ? aps.size() : limit);
+		done.call(null, base);
+		
+	}
+
+	public static void saveAPOffers(StandFaction standFaction) {
+		for(APOffer offer : standFaction.getOffers()) {
+			saveAPOffer(offer);
+		}
 	}
 	
 }

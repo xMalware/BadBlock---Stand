@@ -16,6 +16,7 @@ import com.lelann.factions.utils.ChatUtils;
 import com.lelann.factions.utils.JRawMessage;
 import com.lelann.factions.utils.JRawMessage.ClickEventType;
 import com.lelann.stand.abstracts.StandObject;
+import com.lelann.stand.objects.ApPNJ;
 import com.lelann.stand.objects.CategoryPNJ;
 
 import lombok.Getter;
@@ -24,6 +25,8 @@ public class CategoryPNJManager extends StandObject {
 
 	@Getter
 	private Map<UUID, CategoryPNJ> pnjs = new HashMap<>();
+	@Getter private ApPNJ ap = null;
+	
 	@Getter
 	private Map<String, CategoryPNJ> identifiers = new HashMap<>();
 	
@@ -66,12 +69,17 @@ public class CategoryPNJManager extends StandObject {
 		for(CategoryPNJ pnj : pnjs.values()){
 			pnj.save();
 		}
+		if(ap != null) ap.save();
 	}
 
 	public boolean isPnj(Entity entity) {
-		return pnjs.containsKey(entity.getUniqueId());
+		return pnjs.containsKey(entity.getUniqueId()) || (ap != null && ap.getEntity().getUniqueId().equals(entity.getUniqueId()));
 	}
 
+	public ApPNJ getApPnj() {
+		return ap;
+	}
+	
 	public CategoryPNJ getPnj(Entity e) {
 		return pnjs.get(e.getUniqueId());
 	}
@@ -103,12 +111,34 @@ public class CategoryPNJManager extends StandObject {
 			
 			message.add(details, space, edit, space, del, space, open);
 			
-			System.out.println(message.getMessage());
-			
 			message.send(p);
 		}
 		ChatUtils.sendMessage(p, footer("Pnjs"));
 		
+	}
+
+	public void add(ApPNJ ap) {
+		this.ap = ap;
+		final Villager entity = (Villager) ap.createEntity();
+		
+		for(Entity e : entity.getNearbyEntities(1.0f, 1.0f, 1.0f)){
+			if(entity.getCustomName().equals(e.getCustomName()))
+				e.remove();
+		}
+		
+		new FRunnable(40L){
+			@Override
+			public void run(){
+				if(entity == null || entity.isDead()) {
+					cancel(); return;
+				}
+				Location loc = ap.getLocation().clone();
+				loc.setYaw(entity.getLocation().getYaw());
+				loc.setPitch(entity.getLocation().getPitch());
+				
+				entity.teleport(loc);
+			}
+		}.start();
 	}
 	
 }

@@ -23,6 +23,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.projectiles.ProjectileSource;
 
 import com.lelann.factions.Main;
+import com.lelann.factions.api.Faction;
 import com.lelann.stand.commands.CommandsManager;
 import com.lelann.stand.inventories.abstracts.Categories;
 import com.lelann.stand.listeners.CategoryPNJListener;
@@ -30,7 +31,7 @@ import com.lelann.stand.listeners.CategoryPNJManager;
 import com.lelann.stand.listeners.GeneralListener;
 import com.lelann.stand.listeners.GuiListener;
 import com.lelann.stand.listeners.StandListener;
-import com.lelann.stand.objects.StandOffer;
+import com.lelann.stand.objects.StandFaction;
 import com.lelann.stand.objects.StandPlayer;
 
 import lombok.Getter;
@@ -43,6 +44,7 @@ public class StandPlugin extends JavaPlugin {
 
 	private Map<UUID, ArmorStand> stands;
 	private Map<UUID, StandPlayer> players;
+	private Map<Integer, StandFaction> factions = new HashMap<>();
 
 	@Getter private File pnj;
 	
@@ -170,6 +172,12 @@ public class StandPlugin extends JavaPlugin {
 		System.out.println(StandPlayer.allOffers.size() + " offers loaded !");
 		System.out.println(StandPlayer.allRequests.size() + " requests loaded !");
 		
+		for(Faction f : Main.getInstance().getFactionsManager().getLoadedFactions().values()) {
+			addStandFaction(new StandFaction(f));
+		}
+		
+		System.out.println(StandFaction.allOffers.size() + " apoffers loaded !");
+		
 		new StandConfiguration(getConfig());
 		saveConfig();
 
@@ -195,25 +203,15 @@ public class StandPlugin extends JavaPlugin {
 		return true;
 	}
 
-	//	public void load() {
-	//		WorldGuardManager manager = new WorldGuardManager();
-	//		if(manager.getFlag("standzone") == null) {
-	//			manager.addFlag("standzone", false);
-	//		}
-	//	}
-
-	//	public class ThreadWG extends Thread {
-	//		public ThreadWG() {}
-	//
-	//		public void run() {
-	//			while(StandPlugin.this.getServer().getPluginManager().getPlugin("WorldGuard") == null) {
-	//				try {
-	//					Thread.sleep(5);
-	//				} catch (InterruptedException e) {
-	//					e.printStackTrace();
-	//				}
-	//			}
-	//			StandPlugin.this.load();
-	//		}
-	//	}
+	public void addStandFaction(StandFaction faction) {
+		factions.put(faction.getFaction().getFactionId(), faction);
+	}
+	
+	public void removeStandFaction(Faction faction) {
+		factions.remove(getStandFaction(faction));
+	}
+	
+	public StandFaction getStandFaction(Faction faction) {
+		return factions.get(faction.getFactionId());
+	}
 }
