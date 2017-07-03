@@ -38,6 +38,7 @@ public class APOffer extends StandObject {
 			this.serializable = JSON.loadFromString(set.getString("ap"));
 			this.price = set.getInt("price");
 			this.owner = Main.getInstance().getFactionsManager().getFaction(set.getInt("owner"));
+			System.out.println("FACID: " + owner.getFactionId());
 			this.ap = JSON.saveAsObject(serializable, FactionChunk.class);
 			this.toCreate = false;
 		} catch(Exception e){}
@@ -62,6 +63,7 @@ public class APOffer extends StandObject {
 	
 	public ItemStack createItemStack() {
 		ItemStack base = ItemUtils.create(getName(), new String[] {
+				"&7Prix: &6" + getPrice() + "$",
 				"&7Détails de l'AP", "&8-----------", "&7x: &6" + ap.getX(),
 				"&7z: &6" + ap.getZ(), "&7Faction: &6" + ap.getOwner().getName()}, Material.OBSIDIAN);
 		return base;

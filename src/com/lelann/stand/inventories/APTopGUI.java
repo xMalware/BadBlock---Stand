@@ -15,7 +15,6 @@ import org.bukkit.inventory.ItemStack;
 import com.lelann.factions.Main;
 import com.lelann.factions.api.Faction;
 import com.lelann.factions.api.FactionChunk;
-import com.lelann.factions.api.managers.ChunksManager;
 import com.lelann.factions.database.Callback;
 import com.lelann.factions.utils.ChatUtils;
 import com.lelann.factions.utils.ItemUtils;
@@ -27,6 +26,7 @@ import com.lelann.stand.inventories.abstracts.InventoryManager;
 import com.lelann.stand.inventories.items.MenuItem;
 import com.lelann.stand.objects.APOffer;
 import com.lelann.stand.objects.StandFaction;
+import com.lelann.stand.objects.StandPlayer;
 
 public class APTopGUI extends AbstractInventory {
 
@@ -40,16 +40,20 @@ public class APTopGUI extends AbstractInventory {
 	
 	private boolean hasOffers = true, hasRequests = true, found = false;
 	private Faction fac;
+	private StandFaction faction;
+	private StandPlayer player;
 	
 	public APTopGUI(Player viewer) {
 		super("&7Voir les ventes et le demandes", viewer);
 		fac = Main.getInstance().getPlayersManager().getPlayer(viewer).getFaction();
+		faction = StandPlugin.get().getStandFaction(fac);
+		player = StandPlugin.get().getPlayer(viewer);
 		setup();
 	}
 
 	public void setup() {
 		InventoryManager.addGui(this);
-		setBottomBar(true, true);
+		setBottomBar(false, true);
 		ClickableItem book = new ClickableItem(ItemUtils.create("&aValider votre achat", new String[] {"&cVous devez au moins avoir un item dans votre panier", "&cpour finaliser votre achat !"}, Material.BOOK), new ItemAction() {
 			
 			@Override
@@ -64,7 +68,16 @@ public class APTopGUI extends AbstractInventory {
 				}
 			}
 		});
+		
+		ClickableItem aps = new ClickableItem(ItemUtils.create("&7Vos APs", new String[] {"&7Accédez à vos APs"}, Material.OBSIDIAN), new ItemAction() {
+			@Override
+			public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
+				faction.openGui(player);
+			}
+		});
+		
 		editBottomBar(4, book);
+		editBottomBar(0, aps);
 	}
 	
 	private void buySelectedItems() {
@@ -101,9 +114,9 @@ public class APTopGUI extends AbstractInventory {
 			}
 			
 			Faction other = buying.getOwner();
+			FactionChunk c = buying.getAp();
 			
-			ChunksManager cm = Main.getInstance().getChunksManager(getPlayer().getLocation().getWorld());
-			FactionChunk c = cm.getFactionChunk(getPlayer().getLocation().getChunk());
+			faction.removeOffer(buying);
 			
 			c.getAllowedMembers().clear();
 			c.setFactionId(fac.getFactionId());
@@ -112,14 +125,17 @@ public class APTopGUI extends AbstractInventory {
 			other.setApChunkNumber(other.getApChunkNumber() - 1);
 			fac.setApChunkNumber(fac.getApChunkNumber() + 1);
 			fac.setChunkNumber(fac.getChunkNumber() + 1);
-
+			
+			fac.addToCapital(buying.getPrice());
+			other.removeFromCapital(buying.getPrice());
+			
 			other.updateScoreboard();
 			fac.updateScoreboard();
 			
 			other.sendMessage(PREFIX + "%red%" + fac.getName() + "%yellow% a bien reçu votre AP !");
 			fac.sendMessage(PREFIX + "%yellow%Vous avez bien reçu l'AP de %red%" + other.getName() + "%yellow% !");
 
-			c.save(false); other.save(false); fac.save(false);
+			c.save(false); other.save(false); fac.save(false); faction.save();
 		}
 	}
 	
@@ -308,9 +324,9 @@ public class APTopGUI extends AbstractInventory {
 				@Override
 				public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
 					if(action == InventoryAction.PICKUP_HALF) {
-						addUnit(true, slot);
-					} else {
 						removeUnit(true, slot);
+					} else {
+						addUnit(true, slot);
 					}
 				}
 			};
@@ -325,7 +341,7 @@ public class APTopGUI extends AbstractInventory {
 			menu[0][2] = block;
 			
 			MenuItem item = new MenuItem(menu);
-			int slot = getPrintSlot(index, false);
+			int slot = getPrintSlot(index, true);
 			item.print(APTopGUI.this, slot);
 			
 			offersBySlots.put(slot+1, offer);
@@ -388,6 +404,7 @@ public class APTopGUI extends AbstractInventory {
 		
 		goBack();
 		InventoryManager.restore(this);
+		updateBuyItem(false);
 		showBefore();
 	}
 	

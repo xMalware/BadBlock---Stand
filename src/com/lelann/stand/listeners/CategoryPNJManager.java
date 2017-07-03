@@ -15,6 +15,7 @@ import com.lelann.factions.runnables.FRunnable;
 import com.lelann.factions.utils.ChatUtils;
 import com.lelann.factions.utils.JRawMessage;
 import com.lelann.factions.utils.JRawMessage.ClickEventType;
+import com.lelann.stand.StandPlugin;
 import com.lelann.stand.abstracts.StandObject;
 import com.lelann.stand.objects.ApPNJ;
 import com.lelann.stand.objects.CategoryPNJ;
@@ -69,15 +70,10 @@ public class CategoryPNJManager extends StandObject {
 		for(CategoryPNJ pnj : pnjs.values()){
 			pnj.save();
 		}
-		if(ap != null) ap.save();
 	}
 
 	public boolean isPnj(Entity entity) {
-		return pnjs.containsKey(entity.getUniqueId()) || (ap != null && ap.getEntity().getUniqueId().equals(entity.getUniqueId()));
-	}
-
-	public ApPNJ getApPnj() {
-		return ap;
+		return pnjs.containsKey(entity.getUniqueId());
 	}
 	
 	public CategoryPNJ getPnj(Entity e) {
@@ -113,32 +109,29 @@ public class CategoryPNJManager extends StandObject {
 			
 			message.send(p);
 		}
-		ChatUtils.sendMessage(p, footer("Pnjs"));
 		
-	}
-
-	public void add(ApPNJ ap) {
-		this.ap = ap;
-		final Villager entity = (Villager) ap.createEntity();
-		
-		for(Entity e : entity.getNearbyEntities(1.0f, 1.0f, 1.0f)){
-			if(entity.getCustomName().equals(e.getCustomName()))
-				e.remove();
+		if(StandPlugin.get().getAPManager().getApPNJ() != null) {
+			ApPNJ pnj = StandPlugin.get().getAPManager().getApPNJ();
+			JRawMessage message = new JRawMessage("&c&l> ");
+			String actual = PATTERN.replace("%name%", pnj.getName())
+					.replace("%id%", "ap")
+					.replace("%loc%", pnj.locationToString());
+			JRawMessage details = new JRawMessage(actual);
+			details.addClickEvent(ClickEventType.RUN_COMMAND, "/tp " + pnj.locationToString(), false);
+			
+			JRawMessage del = new JRawMessage("&cDEL");
+			del.addClickEvent(ClickEventType.RUN_COMMAND, "/stand pnj del ap", false);
+			
+			JRawMessage open = new JRawMessage("&3OPEN");
+			open.addClickEvent(ClickEventType.RUN_COMMAND, "/stand pnj open ap", false);
+			
+			message.add(details, space, del, space, open);
+			
+			message.send(p);
 		}
 		
-		new FRunnable(40L){
-			@Override
-			public void run(){
-				if(entity == null || entity.isDead()) {
-					cancel(); return;
-				}
-				Location loc = ap.getLocation().clone();
-				loc.setYaw(entity.getLocation().getYaw());
-				loc.setPitch(entity.getLocation().getPitch());
-				
-				entity.teleport(loc);
-			}
-		}.start();
+		ChatUtils.sendMessage(p, footer("Pnjs"));
+		
 	}
 	
 }

@@ -136,7 +136,7 @@ public class Buy extends AbstractCommand {
 			int totalPrice = price * amount;
 			
 			if(totalPrice > player.getMoney()) {
-				sendMessage(sender, "&cVous n'avez pas les fonds nécessaires pour vendre " + amount + " de cet item !");
+				sendMessage(sender, "&cVous n'avez pas les fonds nécessaires pour demander " + amount + " de cet item !");
 				return;
 			}
 			
@@ -151,7 +151,7 @@ public class Buy extends AbstractCommand {
 			StandRequest newRequest = new StandRequest(player.getUniqueId(), wanted, price, amount);
 			
 			if(player.hasRequestedSame(newRequest)) {
-				sendMessage(sender, "&cVous avez déjà fait une offre pour cet item !");
+				sendMessage(sender, "&cVous avez déjà fait une demande pour cet item !");
 				return;
 			}
 			
@@ -186,7 +186,7 @@ public class Buy extends AbstractCommand {
 			int totalPrice = price * amount;
 			
 			if(totalPrice > player.getMoney()) {
-				sendMessage(sender, "&cVous n'avez pas les fonds nécessaires pour vendre " + amount + " de cet item !");
+				sendMessage(sender, "&cVous n'avez pas les fonds nécessaires pour demander " + amount + " de cet item !");
 				return;
 			}
 			
@@ -201,7 +201,7 @@ public class Buy extends AbstractCommand {
 			StandRequest newRequest = new StandRequest(player.getUniqueId(), wanted, price, amount);
 			
 			if(player.hasRequestedSame(newRequest)) {
-				sendMessage(sender, "&cVous avez déjà fait une offre pour cet item !");
+				sendMessage(sender, "&cVous avez déjà fait une demande pour cet item !");
 				return;
 			}
 			
@@ -258,33 +258,7 @@ public class Buy extends AbstractCommand {
 		return stack;
 	}
 	
-	private boolean validId(String id) {
-		try {
-			getMaterial(id);
-			return true;
-		} catch(Exception e) {
-			return false;
-		}
-	}
-	
-	@SuppressWarnings("deprecation")
-	private Material getMaterial(String id) {
-		id = id.toUpperCase();
-		try {
-			Material mat = null;
-			if(validNumber(id)) {
-				mat = Material.getMaterial(getNumber(id));
-			} else {
-				mat = Material.getMaterial(id);
-			}
-			if(mat == null) throw new RuntimeException();
-			else return mat;
-		} catch(RuntimeException e) {
-			throw e;
-		}
-	}
-	
-	private boolean validItem(CommandSender sender, ItemStack item) {
+	public boolean validItem(CommandSender sender, ItemStack item) {
 		boolean valid = false;
 		if(item.getDurability() != 0 && item.getType().getMaxDurability() != 0){
 			sendMessage(sender, "&cVous ne pouvez pas ajouter un item abimé dans votre stand !");
@@ -304,23 +278,6 @@ public class Buy extends AbstractCommand {
 			valid = true;
 		}
 		return valid;
-	}
-	
-	private boolean validNumber(String number) {
-		try {
-			getNumber(number);
-			return true;
-		} catch(NumberFormatException e) {
-			return false;
-		}
-	}
-	
-	private int getNumber(String number) {
-		try {
-			return Integer.parseInt(number);
-		} catch(NumberFormatException e) {
-			throw e;
-		}
 	}
 	
 }

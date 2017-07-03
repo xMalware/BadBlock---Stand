@@ -177,18 +177,20 @@ public class StandPlayer extends StandObject {
 			String color = "&6";
 			if(request.getGived() == 0) color = "&c";
 			if(completed.contains(request)) color = "&a";
-			JRawMessage msg = new JRawMessage(color + "* &7" + request.getName() + " &8(" + color + request.completedPercent + "%&8)&f - ");	 
+			JRawMessage msg = new JRawMessage(color + "* &7" + request.getName() + " &8(" + color + request.completedPercent + "%&8)&f - "
+					+ "&7ReÃ§us: &a" + request.getGived() + "&7/&a" + request.getInitialAmount() + "&7 Reste: &a" + request.getWantedAmount() + "&7 Prix voulu: &a" + request.getWantedPrice() + "$ &f-");	 
 			JRawMessage give = null;
+
 			if(waiting.get(request) != null && waiting.get(request) > 0) {
-				give = new JRawMessage("&3GET");
+				give = new JRawMessage("&3â¦¿");
 				give.addClickEvent(ClickEventType.RUN_COMMAND, "/stand buy getitems " + request.getType() + ":" + request.getData(), false);
-				give.addHoverEvent(HoverEventType.SHOW_TEXT, "§7Obtenir les items qui vous ont été vendus", false);
+				give.addHoverEvent(HoverEventType.SHOW_TEXT, "Â§7Obtenir les items qui vous ont Ã©tÃ© vendus", false);
 			}
 			JRawMessage delete = null;
 			if(!completed.contains(request)) {
-				delete = new JRawMessage("&cDEL");
+				delete = new JRawMessage("&câœ•");
 				delete.addClickEvent(ClickEventType.RUN_COMMAND, "/stand buy removerequest " + request.getType() + ":" + request.getData(), false);
-				delete.addHoverEvent(HoverEventType.SHOW_TEXT, "§7Supprime votre demande", false);
+				delete.addHoverEvent(HoverEventType.SHOW_TEXT, "Â§7Supprime votre demande", false);
 			}
 			
 			if(give != null)

@@ -24,21 +24,27 @@ import org.bukkit.projectiles.ProjectileSource;
 
 import com.lelann.factions.Main;
 import com.lelann.factions.api.Faction;
+import com.lelann.factions.api.FactionChunk;
 import com.lelann.stand.commands.CommandsManager;
 import com.lelann.stand.inventories.abstracts.Categories;
+import com.lelann.stand.listeners.ApPNJListener;
+import com.lelann.stand.listeners.ApPNJManager;
 import com.lelann.stand.listeners.CategoryPNJListener;
 import com.lelann.stand.listeners.CategoryPNJManager;
+import com.lelann.stand.listeners.ChatListener;
 import com.lelann.stand.listeners.GeneralListener;
 import com.lelann.stand.listeners.GuiListener;
 import com.lelann.stand.listeners.StandListener;
+import com.lelann.stand.objects.APOffer;
 import com.lelann.stand.objects.StandFaction;
 import com.lelann.stand.objects.StandPlayer;
 
 import lombok.Getter;
 
 public class StandPlugin extends JavaPlugin {
+	
 	private static StandPlugin instance = null;
-	public static StandPlugin get(){
+	public static StandPlugin get() {
 		return instance;
 	}
 
@@ -49,6 +55,7 @@ public class StandPlugin extends JavaPlugin {
 	@Getter private File pnj;
 	
 	@Getter CategoryPNJManager manager;
+	@Getter ApPNJManager APManager;
 
 	public ArmorStand getArmorStand(UUID uniqueId){
 		return stands.get(uniqueId);
@@ -129,6 +136,7 @@ public class StandPlugin extends JavaPlugin {
 		}
 		
 		manager = new CategoryPNJManager(Categories.loadCategories(pnj));
+		APManager = new ApPNJManager(Categories.loadAP());
 
 		/*for(String key : config.getConfigurationSection("Pnjs").getKeys(false)){
 			try {
@@ -183,14 +191,16 @@ public class StandPlugin extends JavaPlugin {
 
 		getServer().getPluginManager().registerEvents(new GuiListener(), this);
 		getServer().getPluginManager().registerEvents(new CategoryPNJListener(), this);
+		getServer().getPluginManager().registerEvents(new ApPNJListener(), this);
 		getServer().getPluginManager().registerEvents(new StandListener(players), this);
 		getServer().getPluginManager().registerEvents(new GeneralListener(), this);
+		getServer().getPluginManager().registerEvents(new ChatListener(), this);
 
 		new CommandsManager();
 	}
 
 	@Override
-	public void onDisable(){}
+	public void onDisable() { }
 
 	@Override
 	public void onLoad() {
@@ -213,5 +223,23 @@ public class StandPlugin extends JavaPlugin {
 	
 	public StandFaction getStandFaction(Faction faction) {
 		return factions.get(faction.getFactionId());
+	}
+
+	public void sellAp(Faction f, FactionChunk chunk, int price) {
+		StandFaction faction = getStandFaction(f);
+		Main.getInstance().getChunksManager(chunk.getWorld()).setOnSale(chunk, true);
+		Main.getInstance().getChunksManager(chunk.getWorld()).saveChunk(chunk, true);
+		APOffer offer = new APOffer(f, chunk, price);
+		faction.addOffer(offer);
+		faction.save();
+	}
+	
+	public void unsellAp(Faction f, APOffer offer) {
+		StandFaction faction = getStandFaction(f);
+		FactionChunk chunk = offer.getAp();
+		faction.removeOffer(offer);
+		Main.getInstance().getChunksManager(chunk.getWorld()).setOnSale(chunk, false);
+		Main.getInstance().getChunksManager(chunk.getWorld()).saveChunk(chunk, true);
+		faction.save();
 	}
 }

@@ -2,6 +2,7 @@ package com.lelann.stand.abstracts;
 
 import java.util.UUID;
 
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -9,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.entity.EntityEvent;
 import org.bukkit.event.player.PlayerEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
 
 import com.lelann.factions.utils.ChatUtils;
@@ -72,6 +74,49 @@ public abstract class StandObject {
 	
 	public void sendFMessage(CommandSender sender, String message) {
 		ChatUtils.sendMessage(sender, PREFIX_FACTION + message);
+	}
+	
+	public boolean validId(String id) {
+		try {
+			getMaterial(id);
+			return true;
+		} catch(Exception e) {
+			return false;
+		}
+	}
+	
+	@SuppressWarnings("deprecation")
+	public Material getMaterial(String id) {
+		id = id.toUpperCase();
+		try {
+			Material mat = null;
+			if(validNumber(id)) {
+				mat = Material.getMaterial(getNumber(id));
+			} else {
+				mat = Material.getMaterial(id);
+			}
+			if(mat == null) throw new RuntimeException();
+			else return mat;
+		} catch(RuntimeException e) {
+			throw e;
+		}
+	}
+	
+	public boolean validNumber(String number) {
+		try {
+			getNumber(number);
+			return true;
+		} catch(NumberFormatException e) {
+			return false;
+		}
+	}
+	
+	public int getNumber(String number) {
+		try {
+			return Integer.parseInt(number);
+		} catch(NumberFormatException e) {
+			throw e;
+		}
 	}
 	
 }

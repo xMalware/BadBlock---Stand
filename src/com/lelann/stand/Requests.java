@@ -89,6 +89,7 @@ public class Requests {
 			if(offer.getType() == item.getType() && offer.getData() == item.getData().getData()) {
 				FactionPlayer owner = Main.getInstance().getPlayersManager().getPlayer(offer.getOwner());
 				if(owner == null) continue;
+				if(offer.getAmount() <= 0) continue;
 				base.add(offer);
 			}
 		}

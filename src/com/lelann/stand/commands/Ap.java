@@ -7,6 +7,8 @@ import com.lelann.factions.Main;
 import com.lelann.factions.api.Faction;
 import com.lelann.factions.api.FactionChunk;
 import com.lelann.factions.api.FactionPlayer;
+import com.lelann.factions.listeners.MoveListener;
+import com.lelann.factions.utils.Title;
 import com.lelann.stand.StandPlugin;
 import com.lelann.stand.inventories.APGui;
 import com.lelann.stand.objects.APOffer;
@@ -41,8 +43,7 @@ public class Ap extends AbstractCommand {
 		
 		if(args[0].equalsIgnoreCase("list")) {
 			
-			APGui gui = new APGui(player, faction);
-			gui.show();
+			faction.openGui(player);
 			
 		} else if(args[0].equalsIgnoreCase("sell")) {
 			
@@ -65,16 +66,36 @@ public class Ap extends AbstractCommand {
 			}
 			
 			if(price > 300000) {
-				sendFMessage(sender, "&cPrix invalide. Montant maxima: 300000");
+				sendFMessage(sender, "&cPrix invalide. Montant maximal: 300000");
 				return;
 			}
 			
-			APOffer offer = new APOffer(f, chunk, price);
-			faction.addOffer(offer);
-			faction.save();
+			StandPlugin.get().sellAp(f, chunk, price);
+			f.sendMessage("&c" + sender.getName() + "&e a mis en vente l'AP en &c" + chunk.toString() + "&e pour &c" + price + "$ &e!");
 			
 		} else if(args[0].equalsIgnoreCase("buy")) {
 			
+		} else if(args[0].equalsIgnoreCase("sendtitleaponsale")) {
+			String c = args[1];
+			FactionChunk chunk = Main.getInstance().getChunksManager(player.getPlayer().getWorld()).getFactionChunk(c);
+			if(chunk == null) return;
+			Faction owner = chunk.getOwner();
+			
+			if(owner == null) {
+				System.out.println("owner null");
+				return;
+			}
+			
+			StandFaction current = StandPlugin.get().getStandFaction(owner);
+			APOffer offer = current.getOffer(chunk);
+			if(offer == null) {
+				System.out.println("offer null");
+				return;
+			}
+			String title = "&7AP en vente !";
+			String subtitle = "&7Faction: " + MoveListener.color(f, owner) + owner.getName() + " &7Prix: &b" + offer.getPrice() + "$";
+			
+			new Title(title, subtitle, 10, 60, 10).send((Player) sender);
 		}
 		
 	}

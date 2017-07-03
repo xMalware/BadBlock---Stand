@@ -89,9 +89,8 @@ public class Pnj extends AbstractCommand {
 			}
 			
 			if(identifier.equalsIgnoreCase("ap" )) {
-				StandPlugin.get().getManager().add(new ApPNJ("APs", "Titre de l'inventaire", player.getLocation(), 2));
-				StandPlugin.get().getManager().reload();
-				StandPlugin.get().getManager().savePnjs();
+				StandPlugin.get().getAPManager().add(new ApPNJ("&7APs", "Titre de l'inventaire", player.getLocation(), 2));
+				StandPlugin.get().getAPManager().savePnj();
 				return;
 			}
 			
@@ -119,6 +118,14 @@ public class Pnj extends AbstractCommand {
 					return;
 				}
 
+				if(identifier.equalsIgnoreCase("ap" )) {
+					ApPNJ pnj = StandPlugin.get().getAPManager().getPnj();
+					pnj.setGuiTitle(newName);
+					StandPlugin.get().getAPManager().savePnj();
+					sPlayer.sendMessage("&aLe titre de l'inventaire a été modifié !");
+					return;
+				}
+				
 				CategoryPNJ pnj = StandPlugin.get().getManager().getPnj(identifier);
 				if(pnj == null) {
 					sPlayer.sendMessage("&cL'identifiant n'est pas valide !");
@@ -152,6 +159,15 @@ public class Pnj extends AbstractCommand {
 					return;
 				}
 
+				if(identifier.equalsIgnoreCase("ap" )) {
+					ApPNJ pnj = StandPlugin.get().getAPManager().getPnj();
+					pnj.getEntity().setCustomName(newName);
+					pnj.setName(newName);
+					StandPlugin.get().getAPManager().savePnj();
+					sPlayer.sendMessage("&aNom du pnj changé !");
+					return;
+				}
+				
 				CategoryPNJ pnj = StandPlugin.get().getManager().getPnj(identifier);
 				if(pnj == null) {
 					sPlayer.sendMessage("&cL'identifiant n'est pas valide !");
@@ -162,6 +178,7 @@ public class Pnj extends AbstractCommand {
 				pnj.setName(newName);
 				
 				StandPlugin.get().getManager().savePnjs();
+				sPlayer.sendMessage("&aNom du pnj changé !");
 			}
 		} else if(args[0].equalsIgnoreCase("del")) {
 			
@@ -171,17 +188,31 @@ public class Pnj extends AbstractCommand {
 				return;
 			}
 			
+			if(identifier.equalsIgnoreCase("ap" )) {
+				ApPNJ pnj = StandPlugin.get().getAPManager().getPnj();
+				pnj.delete();
+				sPlayer.sendMessage("&aPnj supprimé !");
+				return;
+			}
+			
 			CategoryPNJ pnj = StandPlugin.get().getManager().getPnj(identifier);
 			if(pnj == null) {
 				sPlayer.sendMessage("&cL'identifiant n'est pas valide !");
 				return;
 			}
 			pnj.delete();
+			sPlayer.sendMessage("&aPnj supprimé !");
 		} else if(args[0].equalsIgnoreCase("open")) {
 			
 			String identifier = args[1];
 			if(identifier == null) {
 				sPlayer.sendMessage("&cVous devez spécifier une identifiant. Exemple: /stand pnj del blocs");
+				return;
+			}
+			
+			if(identifier.equalsIgnoreCase("ap" )) {
+				ApPNJ pnj = StandPlugin.get().getAPManager().getPnj();
+				pnj.openGui(player);
 				return;
 			}
 			

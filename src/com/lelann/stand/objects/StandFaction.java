@@ -3,11 +3,17 @@ package com.lelann.stand.objects;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.entity.Player;
+
 import com.lelann.factions.api.Faction;
 import com.lelann.factions.api.FactionChunk;
 import com.lelann.factions.database.Callback;
 import com.lelann.stand.Requests;
 import com.lelann.stand.abstracts.StandObject;
+import com.lelann.stand.inventories.APGui;
+import com.lelann.stand.inventories.StandGUI;
+import com.lelann.stand.inventories.abstracts.AbstractInventory;
+import com.lelann.stand.inventories.abstracts.InventoryManager;
 
 import lombok.Getter;
 
@@ -75,6 +81,17 @@ public class StandFaction extends StandObject {
 	
 	public void save() {
 		Requests.saveAPOffers(this);
+	}
+
+	public void openGui(StandPlayer player) {
+		APGui gui = new APGui(player, this);
+		AbstractInventory before = InventoryManager.getGui(player.getPlayer().getOpenInventory().getTopInventory(), player.getPlayer());
+		if(before != null) {
+			before.displayGui(gui);
+		} else {
+			gui.show();
+		}
+		
 	}
 	
 }

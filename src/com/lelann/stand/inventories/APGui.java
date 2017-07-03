@@ -1,5 +1,8 @@
 package com.lelann.stand.inventories;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -7,28 +10,32 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.inventory.ItemStack;
 
-import com.lelann.factions.Main;
 import com.lelann.factions.api.FactionChunk;
+import com.lelann.factions.database.Callback;
 import com.lelann.factions.utils.ItemUtils;
+import com.lelann.stand.StandPlugin;
 import com.lelann.stand.inventories.abstracts.AbstractInventory;
 import com.lelann.stand.inventories.abstracts.ClickableItem;
 import com.lelann.stand.inventories.abstracts.InventoryManager;
+import com.lelann.stand.listeners.ChatListener;
+import com.lelann.stand.objects.APOffer;
 import com.lelann.stand.objects.StandFaction;
 import com.lelann.stand.objects.StandPlayer;
+import com.lelann.stand.selection.APUtils;
 
 public class APGui extends AbstractInventory {
 
 	private StandPlayer viewer;
 	private StandFaction faction;
 	
+	private Map<Integer, FactionChunk> APsBySlot = new HashMap<>();
+	
 	public APGui(StandPlayer viewer, StandFaction faction) {
 		super("&7Vos APs", 
-				18,
+				(faction.getFaction().getApChunkNumber() + (faction.getFaction().getApChunkNumber() % 9 == 0 ? 0 : 9 - (faction.getFaction().getApChunkNumber() % 9))) + 9,
 						viewer.getPlayer());
 		this.faction = faction;
 		this.viewer = viewer;
-		
-		System.out.println("size: " + (faction.getFaction().getApChunkNumber() + faction.getFaction().getApChunkNumber() % 9 == 0 ? 0 : 9 - (faction.getFaction().getApChunkNumber() % 9) + 9));
 		
 		setup();
 	}
@@ -43,18 +50,108 @@ public class APGui extends AbstractInventory {
 	private void printAPs() {
 		int slot = 0;
 		for(FactionChunk ap : faction.getFaction().getAPs(viewer.getPlayer().getWorld().getName())) {
-			ItemStack apStack = ItemUtils.create("&6" + ap.toString(), new String[] {
-					"&7> &bClic droit&7 pour vendre votre AP",
-					"&7> &bClic gauche&7 pour vous tp à votre AP"}, Material.OBSIDIAN);
-			addClickable(slot, new ClickableItem(apStack, new ItemAction() {
-				
-				@Override
-				public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
-					p.sendMessage("Vente/Tp à faire (:");
+			if(!ap.isAp()) continue;
+			if(!ap.isOnSale()) {
+				ItemStack apStack = ItemUtils.create("&6" + ap.toString(), new String[] {
+						"&7> &bClic droit&7 pour vendre votre AP",
+						"&7> &bClic gauche&7 pour vous tp à votre AP"}, Material.OBSIDIAN);
+				addClickable(slot, new ClickableItem(apStack, new ItemAction() {
 					
-				}
-			}));
+					@Override
+					public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
+						if(action == InventoryAction.PICKUP_HALF) {
+							sellAp(slot);
+						} else {
+							tpToAp(slot, p);
+						}
+						
+					}
+				}));
+			} else {
+				ItemStack apStack = ItemUtils.create("&6" + ap.toString() + "&7 [&cEN VENTE&7]", new String[] {
+						"&7> &bClic droit&7 pour annuler la vente",
+						"&7> &bClic gauche&7 pour vous tp à votre AP"}, Material.OBSIDIAN);
+				addClickable(slot, new ClickableItem(apStack, new ItemAction() {
+					
+					@Override
+					public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
+						if(action == InventoryAction.PICKUP_HALF) {
+							unsellAp(slot);
+						} else {
+							tpToAp(slot, p);
+						}
+						
+					}
+				}));
+			}
+			APsBySlot.put(slot, ap);
+			slot++;
 		}
+	}
+	
+	private void sellAp(int slot) {
+		FactionChunk current = APsBySlot.get(slot);
+		if(current == null) {
+			System.out.println("CHUNK IS NULL AT SLOT " + slot);
+			return;
+		}
+		if(current.isOnSale()) {
+			sendFMessage("&cCet AP est déjà en vente !");
+			return;
+		}
+		getPlayer().closeInventory();
+		sendFMessage("&eVeuillez indiquer un prix de vente. Ex: 10000 | Pour annuler, tapez simplement 'annuler'.");
+		ChatListener.waitForCommand.put(getPlayer().getUniqueId(), new Callback<String>() {
+			
+			@Override
+			public void call(Throwable t, String result) {
+				
+				if(result.equalsIgnoreCase("annuler")) {
+					sendFMessage("&eAnnulé.");
+					InventoryManager.restore(APGui.this);
+					show();
+					return;
+				}
+				
+				if(!validNumber(result)) {
+					sendFMessage("&cPrix invalide.");
+					return;
+				}
+				
+				int price = getNumber(result);
+				
+				if(price < 2000) {
+					sendFMessage("&cPrix invalide. Montant minimum: 2000");
+					return;
+				}
+				
+				if(price > 300000) {
+					sendFMessage("&cPrix invalide. Montant maximal: 300000");
+					return;
+				}
+				
+				StandPlugin.get().sellAp(faction.getFaction(), current, price);
+				
+				faction.getFaction().sendMessage("&c" + getPlayer().getName() + "&e a mis en vente l'AP en &c" + current.toString() + "&e pour &c" + price + "$ &e!");
+			}
+		});
+	}
+	
+	private void unsellAp(int slot) {
+		FactionChunk current = APsBySlot.get(slot);
+		if(current == null) return;
+		if(!current.isOnSale()) return;
+		APOffer toRevok = faction.getOffer(current);
+		StandPlugin.get().unsellAp(faction.getFaction(), toRevok);
+		faction.getFaction().sendMessage("&c" + getPlayer().getName() + "&e a annulé la mise en vente de l'AP en &c" + current.toString() + "&e !");
+	}
+	
+	private void tpToAp(int slot, Player p) {
+		FactionChunk current = APsBySlot.get(slot);
+		if(current == null) return;
+		
+		p.teleport(APUtils.getTpLoc(p.getWorld().getName(), current.getX(), current.getZ()));
+		sendFMessage("&eTéléporté !");
 	}
 	
 	/* ----------- UNUSED ------------ */

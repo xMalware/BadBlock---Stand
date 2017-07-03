@@ -427,7 +427,9 @@ public class TopGUI extends AbstractInventory {
 					
 					ItemStack head = ItemUtils.createHead("&7Stand: " + StandPlugin.get().getPlayer(offer.getOwner()).getStandName(), name);
 					ItemStack addToCart = ItemUtils.create("&aAjouter&7 ou&c retirer", new String[] {"", "&7> &bClic gauche&7 pour ajouter une unité", "&7> &bClic droit&7 pour retirer une unité"}, Material.STAINED_GLASS_PANE, 14);
-					ItemStack concerned = ItemUtils.create("&7Vendeur: &b" + name, new String[] {"&7Prix: &b" + offer.getPrice() + "$", "&7Taxe: &b" + taxe(offer.getPrice()) + "$"}, offer.getType(), offer.getAmount(), offer.getData());
+					ItemStack concerned = ItemUtils.create("&7Vendeur: &b" + name, new String[] {"&7Prix: &b" + offer.getPrice() + "$",
+							"&7Quantité: &b" + offer.getAmount(),
+							"&7Taxe: &b" + taxe(offer.getPrice()) + "$"}, offer.getType(), offer.getAmount(), offer.getData());
 					
 					ClickableItem clickHead = new ClickableItem(head, new ItemAction() {
 						
@@ -510,7 +512,9 @@ public class TopGUI extends AbstractInventory {
 		
 		ItemStack head = ItemUtils.createHead("&7Stand: " + StandPlugin.get().getPlayer(request.getOwner()).getStandName(), name);
 		ItemStack addToCart = ItemUtils.create("&aAjouter&7 ou&c retirer", new String[] {"", "&7> &bClic gauche&7 pour ajouter une unité", "&7> &bClic droit&7 pour retirer une unité"}, Material.STAINED_GLASS_PANE, 14);
-		ItemStack concerned = ItemUtils.create("&7Acheteur: &b" + name, new String[] {"&7Prix voulu: &b" + request.getWantedPrice() + "$"}, request.getType(), request.getWantedAmount(), request.getData());
+		ItemStack concerned = ItemUtils.create("&7Acheteur: &b" + name, new String[] {
+				"&7Quantité demandée: &b" + request.getWantedAmount(),
+				"&7Prix voulu: &b" + request.getWantedPrice() + "$"}, request.getType(), request.getWantedAmount(), request.getData());
 		
 		ClickableItem clickHead = new ClickableItem(head, new ItemAction() {
 			
