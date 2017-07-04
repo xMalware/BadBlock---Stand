@@ -22,6 +22,9 @@ public abstract class StandObject {
 	public static final String PREFIX = "%darkaqua%[%aqua%Stand%darkaqua%]&7 ";
 	public static final String PREFIX_FACTION = "%darkaqua%[%aqua%Factions%darkaqua%] ";
 	
+	public static final int MIN_PRICE = 50;
+	public static final int MAX_PRICE = 100000;
+	
 	public String header(String what) {
 		return "&8&l«&b&l-&8&l»&m----------&8&l«&b&l-&8&l»&b " + what + " &8&l«&b&l-&8&l»&m----------&f&8&l«&b&l-&8&l»&b";
 	}

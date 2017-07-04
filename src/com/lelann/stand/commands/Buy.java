@@ -145,6 +145,11 @@ public class Buy extends AbstractCommand {
 				return;
 			}
 			
+			if(price > MAX_PRICE) {
+				sendMessage(sender, "&cMontant invalide. Montant maximal: " + MAX_PRICE);
+				return;
+			}
+			
 			ItemStack wanted = p.getItemInHand().clone();
 			wanted.setAmount(1);
 			

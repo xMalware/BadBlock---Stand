@@ -120,18 +120,17 @@ public class APGui extends AbstractInventory {
 				
 				int price = getNumber(result);
 				
-				if(price < 2000) {
-					sendFMessage("&cPrix invalide. Montant minimum: 2000");
+				if(price < MIN_PRICE) {
+					sendFMessage("&cPrix invalide. Montant minimum: " + MIN_PRICE + "$");
 					return;
 				}
 				
-				if(price > 300000) {
-					sendFMessage("&cPrix invalide. Montant maximal: 300000");
+				if(price > MAX_PRICE) {
+					sendFMessage("&cPrix invalide. Montant maximal: " + MAX_PRICE + "$");
 					return;
 				}
 				
 				StandPlugin.get().sellAp(faction.getFaction(), current, price);
-				
 				faction.getFaction().sendMessage("&c" + getPlayer().getName() + "&e a mis en vente l'AP en &c" + current.toString() + "&e pour &c" + price + "$ &e!");
 			}
 		});
@@ -142,6 +141,7 @@ public class APGui extends AbstractInventory {
 		if(current == null) return;
 		if(!current.isOnSale()) return;
 		APOffer toRevok = faction.getOffer(current);
+		getPlayer().closeInventory();
 		StandPlugin.get().unsellAp(faction.getFaction(), toRevok);
 		faction.getFaction().sendMessage("&c" + getPlayer().getName() + "&e a annulé la mise en vente de l'AP en &c" + current.toString() + "&e !");
 	}

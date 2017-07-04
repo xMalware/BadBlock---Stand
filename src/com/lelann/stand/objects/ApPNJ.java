@@ -100,8 +100,9 @@ public class ApPNJ extends StandObject {
 	}
 
 	public void delete() {
-		StandPlugin.get().getManager().getPnjs().remove(getEntity().getUniqueId());
-		StandPlugin.get().getManager().savePnjs();
+//		StandPlugin.get().getManager().getPnjs().remove(getEntity().getUniqueId());
+//		StandPlugin.get().getManager().savePnjs();
+		StandPlugin.get().getAPManager().removeApPnj();
 		Categories.removeApPnj();
 		getEntity().remove();
 	}

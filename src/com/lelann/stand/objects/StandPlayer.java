@@ -159,7 +159,7 @@ public class StandPlayer extends StandObject {
 	public void deleteRequest(StandRequest request) {
 		request.setWantedAmount(0);
 		getRequests().remove(request);
-		allRequests.remove(request);
+		//allRequests.remove(request);
 		waiting.remove(request);
 		Requests.saveRequest(request);
 	}

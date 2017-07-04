@@ -118,6 +118,7 @@ public class APTopGUI extends AbstractInventory {
 			
 			faction.removeOffer(buying);
 			
+			c.setOnSale(false);
 			c.getAllowedMembers().clear();
 			c.setFactionId(fac.getFactionId());
 
@@ -126,21 +127,26 @@ public class APTopGUI extends AbstractInventory {
 			fac.setApChunkNumber(fac.getApChunkNumber() + 1);
 			fac.setChunkNumber(fac.getChunkNumber() + 1);
 			
-			fac.addToCapital(buying.getPrice());
-			other.removeFromCapital(buying.getPrice());
+			fac.removeFromCapital(buying.getPrice());
+			other.addToCapital(buying.getPrice());
 			
 			other.updateScoreboard();
 			fac.updateScoreboard();
 			
-			other.sendMessage(PREFIX + "%red%" + fac.getName() + "%yellow% a bien reçu votre AP !");
-			fac.sendMessage(PREFIX + "%yellow%Vous avez bien reçu l'AP de %red%" + other.getName() + "%yellow% !");
+			//other.sendMessage(PREFIX + "%red%" + fac.getName() + "%yellow% a bien reçu votre AP !");
+			//fac.sendMessage(PREFIX + "%yellow%Vous avez bien reçu l'AP de %red%" + other.getName() + "%yellow% !");
+			
+			other.sendMessage(PREFIX_FACTION + "&eVous avez vendu votre AP en &c" + c.toString() + "&e à &c" + fac.getName() + "&e pour &c" + buying.getPrice() + "$&e !");
+			fac.sendMessage(PREFIX_FACTION + "&eVous avez acheté l'AP de &c" + other.getName() + "&e en &c" + c.toString() + "&e pour &c" + buying.getPrice() + "$&e !");
 
 			c.save(false); other.save(false); fac.save(false); faction.save();
 		}
+		
+		regenerate();
 	}
 	
 	private void sellSelectedItems() {
-		
+		regenerate();
 	}
 	
 	private void addUnit(boolean isOffer, int slot) {
@@ -155,10 +161,12 @@ public class APTopGUI extends AbstractInventory {
 			APOffer offer = offersBySlots.get(slot);
 			
 			if(offer == null) {
+				System.out.println("offer is null");
 				return;
 			}
 			
 			if(getInventory().getItem(slot).getAmount() < 1 || getInventory().getItem(slot).getDurability() == 14) {
+				System.out.println("updating !");
 				totalBuy++;
 				totalMoneyBuy += offer.getPrice();
 				indicator(slot, true);
@@ -180,7 +188,13 @@ public class APTopGUI extends AbstractInventory {
 		
 			APOffer offer = offersBySlots.get(slot);
 			
+			if(offer == null) {
+				System.out.println("offer is null : removeUnit");
+				return;
+			}
+			
 			if(getInventory().getItem(slot).getAmount() > 1 || getInventory().getItem(slot).getDurability() == 13 && totalBuy > 0) {
+				System.out.println("updating ! removeUnit");
 				totalBuy--;
 				totalMoneyBuy -= offer.getPrice();
 				indicator(slot, false);
@@ -241,6 +255,7 @@ public class APTopGUI extends AbstractInventory {
 	}
 	
 	public void updateBuyItem(boolean isOffer) {
+		System.out.println("updatebuyitem ! : " + isOffer + " -> isOffer");
 		//StandPlayer player = StandPlugin.get().getPlayer(getPlayer());
 		StandFaction faction = StandPlugin.get().getStandFaction(fac);
 		ItemStack newStack = null;
@@ -403,9 +418,7 @@ public class APTopGUI extends AbstractInventory {
 		//requestsBySlots = new HashMap<>();
 		
 		goBack();
-		InventoryManager.restore(this);
-		updateBuyItem(false);
-		showBefore();
+		new APTopGUI(getPlayer()).showBefore();
 	}
 	
 	/* -------- UNUSED --------- */

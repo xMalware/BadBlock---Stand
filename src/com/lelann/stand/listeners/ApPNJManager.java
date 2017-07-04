@@ -16,7 +16,8 @@ public class ApPNJManager extends StandObject {
 	private ApPNJ pnj = null;
 	
 	public ApPNJManager(ApPNJ pnj) {
-		add(pnj);
+		if(pnj != null)
+			add(pnj);
 	}
 	
 	public void add(ApPNJ pnj) {
@@ -53,6 +54,10 @@ public class ApPNJManager extends StandObject {
 	
 	public ApPNJ getApPNJ() {
 		return pnj;
+	}
+
+	public void removeApPnj() {
+		this.pnj = null;
 	}
 	
 }

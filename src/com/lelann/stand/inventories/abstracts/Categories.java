@@ -110,11 +110,14 @@ public class Categories {
 	public static ApPNJ loadAP() {
 		String path = "Pnjs.AP";
 		ConfigurationSection current = configuration.getConfigurationSection(path);
-		String name = current.getString("Name");
-		String title = current.getString("InventoryTitle");
-		int professionId = current.getInt("Profession");
-		Location loc = ConfigUtils.locationFromConfig(current);
-		return new ApPNJ(name, title, loc, professionId);
+		if(current != null) {
+			String name = current.getString("Name");
+			String title = current.getString("InventoryTitle");
+			int professionId = current.getInt("Profession");
+			Location loc = ConfigUtils.locationFromConfig(current);
+			return new ApPNJ(name, title, loc, professionId);
+		}
+		return null;
 	}
 	
 }

@@ -158,7 +158,8 @@ public class TopGUI extends AbstractInventory {
 			
 			selling.remove(amount);
 			
-			if(selling.getWantedAmount() <= 0){
+			if(selling.getWantedAmount() <= 0) {
+				System.out.println("removing request !");
 				owner.removeRequest(selling);
 			}
 			
@@ -695,8 +696,9 @@ public class TopGUI extends AbstractInventory {
 		requestsBySlots = new HashMap<>();
 		
 		goBack();
-		InventoryManager.restore(this);
-		showBefore();
+		//InventoryManager.restore(this);
+		//showBefore();
+		new TopGUI(getTitle(), item, getPlayer()).showBefore();
 	}
 	
 }

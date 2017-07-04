@@ -42,8 +42,11 @@ public class StandFaction extends StandObject {
 	}
 	
 	public void removeOffer(APOffer offer) {
+		offer.toDelete();
+		Requests.saveAPOffer(offer);
+		allOffers.remove(offer);
 		getOffers().remove(offer);
-		offer.remove();
+		offers = new ArrayList<>();
 	}
 	
 	public APOffer getOffer(FactionChunk fc) {

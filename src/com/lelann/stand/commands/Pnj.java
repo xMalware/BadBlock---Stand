@@ -63,7 +63,32 @@ public class Pnj extends AbstractCommand {
 			sendHelp(sender); return;
 		}
  
-		if(args[0].equalsIgnoreCase("edit")) {
+		if(args[0].equalsIgnoreCase("setpos")) {
+			
+			String identifier = args[1];
+			if(identifier == null) {
+				sPlayer.sendMessage("&cVous devez spécifier une identifiant. Exemple: /stand pnj del blocs");
+				return;
+			}
+			
+			if(identifier.equalsIgnoreCase("ap" )) {
+				ApPNJ pnj = StandPlugin.get().getAPManager().getPnj();
+				pnj.setLocation(player.getLocation());
+				pnj.getEntity().teleport(player.getLocation());
+				sPlayer.sendMessage("&aPnj déplacé !");
+				return;
+			}
+			
+			CategoryPNJ pnj = StandPlugin.get().getManager().getPnj(identifier);
+			if(pnj == null) {
+				sPlayer.sendMessage("&cL'identifiant n'est pas valide !");
+				return;
+			}
+			pnj.setLocation(player.getLocation());
+			pnj.getEntity().teleport(player.getLocation());
+			sPlayer.sendMessage("&aPnj déplacé !");
+			
+		} else if(args[0].equalsIgnoreCase("edit")) {
 			
 			String identifier = args[1];
 			if(identifier == null) {
@@ -89,6 +114,12 @@ public class Pnj extends AbstractCommand {
 			}
 			
 			if(identifier.equalsIgnoreCase("ap" )) {
+				
+				if(StandPlugin.get().getAPManager().getApPNJ() != null) {
+					sendMessage(sender, "&cUn pnj de ce type existe déjà ! /stand pnj del ap pour le supprimer !");
+					return;
+				}
+				
 				StandPlugin.get().getAPManager().add(new ApPNJ("&7APs", "Titre de l'inventaire", player.getLocation(), 2));
 				StandPlugin.get().getAPManager().savePnj();
 				return;

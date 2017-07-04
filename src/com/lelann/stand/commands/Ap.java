@@ -47,6 +47,8 @@ public class Ap extends AbstractCommand {
 			
 		} else if(args[0].equalsIgnoreCase("sell")) {
 			
+			System.out.println(faction.getOffers().size());
+			
 			if(faction.getOffers().size() > 0) {
 				sendFMessage(sender, "&cVous devez attendre la vente de votre AP avant d'en vendre un nouveau !");
 				return;
@@ -60,12 +62,12 @@ public class Ap extends AbstractCommand {
 			
 			int price = Integer.parseInt(args[2]);
 			
-			if(price < 2000) {
+			if(price < MIN_PRICE) {
 				sendFMessage(sender, "&cPrix invalide. Montant minimum: 2000");
 				return;
 			}
 			
-			if(price > 300000) {
+			if(price > MAX_PRICE) {
 				sendFMessage(sender, "&cPrix invalide. Montant maximal: 300000");
 				return;
 			}
@@ -74,6 +76,8 @@ public class Ap extends AbstractCommand {
 			f.sendMessage("&c" + sender.getName() + "&e a mis en vente l'AP en &c" + chunk.toString() + "&e pour &c" + price + "$ &e!");
 			
 		} else if(args[0].equalsIgnoreCase("buy")) {
+			
+			
 			
 		} else if(args[0].equalsIgnoreCase("sendtitleaponsale")) {
 			String c = args[1];

@@ -23,7 +23,8 @@ public class APOffer extends StandObject {
 	@Getter@Setter Faction owner;
 	@Getter@Setter FactionChunk ap;
 
-	private boolean toCreate = false, remove = false;
+	private boolean toCreate = false;
+	private boolean remove;
 
 	public APOffer(Faction owner, FactionChunk ap, int price){
 		this.owner = owner;
@@ -31,6 +32,7 @@ public class APOffer extends StandObject {
 		this.serializable = JSON.loadFromObject(ap);
 		this.ap = ap;
 		this.toCreate = true;
+		this.remove = false;
 	}
 
 	public APOffer(ResultSet set){
@@ -41,10 +43,12 @@ public class APOffer extends StandObject {
 			System.out.println("FACID: " + owner.getFactionId());
 			this.ap = JSON.saveAsObject(serializable, FactionChunk.class);
 			this.toCreate = false;
+			this.remove = false;
 		} catch(Exception e){}
 	}
 
 	public String getSQLString() {
+		System.out.println("apoffer: remove=" + remove);
 		if(remove) {
 			toCreate = true;
 			return "DELETE FROM sAPOffers WHERE owner=" + owner.getFactionId() + " AND ap='" + serializable + "'";
@@ -52,13 +56,8 @@ public class APOffer extends StandObject {
 			toCreate = false;
 			return "INSERT INTO sAPOffers(owner, ap, price) VALUES(" + owner.getFactionId() + ", '" + serializable + "', " + price + ")";
 		} else {
-			return "UPDATE sAPOffers SET ap='" + serializable + "', price=" + price + " WHERE owner=";
+			return "UPDATE sAPOffers SET ap='" + serializable + "', price=" + price + " WHERE owner=" + owner.getFactionId();
 		}
-	}
-	
-	public void remove() {
-		remove = true;
-		StandFaction.allOffers.remove(this);
 	}
 	
 	public ItemStack createItemStack() {
@@ -82,6 +81,10 @@ public class APOffer extends StandObject {
 				&& ap.getWorld().equals(this.ap.getWorld())
 				&& ap.getX() == this.ap.getX()
 				&& ap.getZ() == this.ap.getZ();
+	}
+
+	public void toDelete() {
+		this.remove = true;
 	}
 	
 }

@@ -178,6 +178,7 @@ public class Requests {
 				StandPlayer player = request.getPlayer(request.getOwner());
 				if(player.getCompleted().contains(request)) continue;
 				if(owner == null) continue;
+				if(request.getWantedAmount() <= 0) continue;
 				base.add(request);
 			}
 		}

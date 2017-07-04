@@ -229,9 +229,11 @@ public class StandPlugin extends JavaPlugin {
 		StandFaction faction = getStandFaction(f);
 		Main.getInstance().getChunksManager(chunk.getWorld()).setOnSale(chunk, true);
 		Main.getInstance().getChunksManager(chunk.getWorld()).saveChunk(chunk, true);
+		
 		APOffer offer = new APOffer(f, chunk, price);
 		faction.addOffer(offer);
 		faction.save();
+		faction.getFaction().save(false);
 	}
 	
 	public void unsellAp(Faction f, APOffer offer) {
@@ -241,5 +243,6 @@ public class StandPlugin extends JavaPlugin {
 		Main.getInstance().getChunksManager(chunk.getWorld()).setOnSale(chunk, false);
 		Main.getInstance().getChunksManager(chunk.getWorld()).saveChunk(chunk, true);
 		faction.save();
+		faction.getFaction().save(false);
 	}
 }
