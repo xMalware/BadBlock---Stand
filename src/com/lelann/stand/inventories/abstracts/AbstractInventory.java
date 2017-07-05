@@ -164,6 +164,7 @@ public abstract class AbstractInventory extends StandObject {
 	
 	public void removeClickable(ClickableItem item) {
 		InventoryManager.unregisterItem(this, item);
+		itemsSlot.remove(item.getSlot());
 	}
 	
 	/**
@@ -316,6 +317,10 @@ public abstract class AbstractInventory extends StandObject {
 	
 	public void run(Runnable cb) {
 		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(getPlugin(), cb, 1L);
+	}
+	
+	public void sendMessage(String msg) {
+		sendMessage(getPlayer(), msg);
 	}
 	
 	public abstract boolean onClick(Player p, ItemStack clicked, ItemStack cursor, int slot, InventoryAction action, ClickType clickType, SlotType slotType);

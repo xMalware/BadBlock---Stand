@@ -44,6 +44,8 @@ public class TopGUI extends AbstractInventory {
 	
 	private double totalMoneySell = 0;
 	private int totalSell = 0;
+	
+	private int totalPrinted = 0;
 
 	private Map<StandOffer, Integer> amounts = new HashMap<>();
 	private Map<Integer, StandOffer> offersBySlots = new HashMap<>();
@@ -385,6 +387,13 @@ public class TopGUI extends AbstractInventory {
 		update();
 	}
 	
+	private void addStackToCart(boolean isOffer, int slot) {
+		int max = isOffer ? (offersBySlots.get(slot).getAmount() >= 64 ? 64 : offersBySlots.get(slot).getAmount()) : (requestsBySlots.get(slot).getWantedAmount() >= 64 ? 64 : requestsBySlots.get(slot).getWantedAmount());
+		for(int i = 0; i < max; i++) {
+			addItemToCart(isOffer, slot);
+		}
+	}
+	
 	private boolean found = false;
 	
 	public void loadTops(Runnable callBack, Runnable cbTimeout, int timeout) {
@@ -445,6 +454,14 @@ public class TopGUI extends AbstractInventory {
 						
 						@Override
 						public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
+							
+							System.out.println(action);
+							
+							if(action == InventoryAction.CLONE_STACK) {
+								addStackToCart(true, slot);
+								return;
+							}
+							
 							if(action == InventoryAction.PICKUP_HALF) { //Clic droit
 								removeItemFromCart(true, slot);
 							} else {
@@ -463,6 +480,8 @@ public class TopGUI extends AbstractInventory {
 					MenuItem item = new MenuItem(menu);
 					int slot = getPrintSlot(printIndex, true);
 					item.print(TopGUI.this, slot);
+					
+					totalPrinted++;
 					
 					printIndex++;
 					
@@ -549,6 +568,8 @@ public class TopGUI extends AbstractInventory {
 		int slot = getPrintSlot(printIndex, false);
 		item.print(TopGUI.this, slot);
 		
+		totalPrinted++;
+		
 		requestsBySlots.put(slot+1, request);
 		
 		return true;
@@ -579,11 +600,16 @@ public class TopGUI extends AbstractInventory {
 			@Override
 			public void run() {
 				
+				if(totalPrinted <= 0) {
+					sendMessage("&cUne erreur est survenue : des offres ont été trouvées mais n'ont pas pu être affichées.");
+					return;
+				}
+				
 				found = true;
 				
 				if(!hasOffers && !hasRequests) {
 					goBack();
-					ChatUtils.sendMessage(p, "&cAucune offre ni demande n'ont été trouvées pour cet item :c");
+					sendMessage("&cAucune offre ni demande n'ont été trouvées pour cet item :c");
 					return;
 				}
 				
@@ -595,14 +621,14 @@ public class TopGUI extends AbstractInventory {
 					}
 				} else { 
 					goBack();
-					ChatUtils.sendMessage(p, "&cAucune offre ni demande n'ont été trouvées pour cet item :c");
+					sendMessage("&cAucune offre ni demande n'ont été trouvées pour cet item :c");
 				}
 			}
 		}, new Runnable() {
 			
 			@Override
 			public void run() {
-				ChatUtils.sendMessage(p, "&cLa requête a pris trop de temps.");
+				sendMessage("&cLa requête a pris trop de temps.");
 				p.closeInventory();
 				
 			}

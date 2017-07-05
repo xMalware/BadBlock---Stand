@@ -11,6 +11,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import com.lelann.factions.Main;
 import com.lelann.factions.api.Faction;
@@ -25,16 +26,22 @@ import com.lelann.stand.inventories.abstracts.ClickableItem;
 import com.lelann.stand.inventories.abstracts.InventoryManager;
 import com.lelann.stand.inventories.items.MenuItem;
 import com.lelann.stand.objects.APOffer;
+import com.lelann.stand.objects.APRequest;
 import com.lelann.stand.objects.StandFaction;
 import com.lelann.stand.objects.StandPlayer;
 
 public class APTopGUI extends AbstractInventory {
 
 	private List<APOffer> topOffers = new ArrayList<>();
-	//private List<APRequest> topRequests = new ArrayList<>();
+	private List<APRequest> topRequests = new ArrayList<>();
 	
 	private Map<APOffer, Integer> amounts = new HashMap<>();
 	private Map<Integer, APOffer> offersBySlots = new HashMap<>();
+	
+	private Map<APRequest, Integer> amountsRequests = new HashMap<>();
+	private Map<Integer, APRequest> requestsBySlots = new HashMap<>();
+	
+	private Map<Integer, List<FactionChunk>> apToGive = new HashMap<>();
 	
 	private int totalBuy, totalSell, totalMoneyBuy, totalMoneySell = 0;
 	
@@ -78,6 +85,39 @@ public class APTopGUI extends AbstractInventory {
 		
 		editBottomBar(4, book);
 		editBottomBar(0, aps);
+	}
+	
+	private void sellSelectedItems() {
+		if(amounts.isEmpty()) {
+			sendFMessage("&cVous devez sélectionner au moins un item avant de continuer.");
+			return;
+		}
+		
+		if(fac.getApChunkNumber() >= 4) {
+			sendFMessage("&cVous avez atteint le nombre maximal d'APs que vous pouvez acheter.");
+			regenerate();
+			return;
+		}
+		
+		if(fac.getApChunkNumber() + totalBuy > 4) {
+			sendFMessage("&cVous allez dépasser la limite d'APs en faisant ceci.");
+			regenerate();
+			return;
+		}
+		
+		if(!canBuyAll()) {
+			sendFMessage("&cVous n'avez pas assez de capital pour tout acheter !");
+			regenerate();
+			return;
+		}
+		
+		for(APOffer selling : amounts.keySet()) {
+			
+			
+			//c.save(false); other.save(false); fac.save(false); faction.save();
+		}
+		
+		regenerate();
 	}
 	
 	private void buySelectedItems() {
@@ -145,18 +185,14 @@ public class APTopGUI extends AbstractInventory {
 		regenerate();
 	}
 	
-	private void sellSelectedItems() {
-		regenerate();
-	}
-	
 	private void addUnit(boolean isOffer, int slot) {
 		
 		if(isOffer) {
 		
-			/*if(totalSell > 0) {
+			if(totalSell > 0) {
 				totalSell = 0;
 				resetRequests();
-			} TODO */
+			}
 			
 			APOffer offer = offersBySlots.get(slot);
 			
@@ -176,10 +212,67 @@ public class APTopGUI extends AbstractInventory {
 			
 		} else {
 			//todo
+			if(totalBuy > 0) {
+				totalBuy = 0;
+				resetOffers();
+			}
 			
+			APRequest req = requestsBySlots.get(slot);
+			
+			if(req == null) {
+				System.out.println("req is null");
+				return;
+			}
+			
+			if(getInventory().getItem(slot).getAmount() < 1 || getInventory().getItem(slot).getDurability() == 14) {
+				
+				if(requestsBySlots.get(slot).getOwner().getFactionId() == faction.getFaction().getFactionId()) return;
+				
+				APGui gui = new APGui(player, faction, true);
+				gui.openSelect(this, apToGive.get(slot), new Callback<FactionChunk>() {
+
+					@Override
+					public void call(Throwable t, FactionChunk result) {
+						
+						if(apToGive.get(slot) == null) apToGive.put(slot, new ArrayList<>());
+						
+						List<FactionChunk> toGive = apToGive.get(slot);
+						toGive.add(result);
+						apToGive.put(slot, toGive);
+						updateCurrentItem(slot);
+						
+						totalSell++;
+						totalMoneySell += req.getWantedPrice();
+						indicator(slot, true);
+						amountsRequests.put(req, amountsRequests.get(req) == null ? getInventory().getItem(slot).getAmount() : amountsRequests.get(req) + 1);
+						updateBuyItem(isOffer);
+					}
+					
+				});
+			}
 		}
 		
 		update();
+	}
+	
+	private void updateCurrentItem(int slot) {
+		int cSlot = slot + 1;
+		//Concerned
+		ItemStack st = getInventory().getItem(cSlot);
+		ItemMeta meta = st.getItemMeta();
+		List<String> lore = meta.getLore().subList(0, 1);
+		if(apToGive.get(slot) != null && apToGive.get(slot).size() > 0) {
+			lore.add("");
+			lore.add(ChatUtils.colorReplace("&7Vous vendez les APs:"));
+			List<FactionChunk> toGive = apToGive.get(slot);
+			for(int pos = 0; pos < toGive.size(); pos++) {
+				FactionChunk c = toGive.get(pos);
+				lore.add(ChatUtils.colorReplace("&b" + (pos+1) + ") &7AP en " + c.toString()));
+			}
+		}
+		meta.setLore(lore);
+		st.setItemMeta(meta);
+		getInventory().setItem(cSlot, st);
 	}
 	
 	private void removeUnit(boolean isOffer, int slot) {
@@ -209,7 +302,34 @@ public class APTopGUI extends AbstractInventory {
 			
 		} else {
 			
-			//TODO
+			APRequest req = requestsBySlots.get(slot);
+			
+			if(req == null) {
+				System.out.println("req is null : removeUnit");
+				return;
+			}
+			
+			if(getInventory().getItem(slot).getAmount() > 1 || getInventory().getItem(slot).getDurability() == 13 && totalSell > 0) {
+				
+				if(requestsBySlots.get(slot).getOwner().getFactionId() == faction.getFaction().getFactionId()) return;
+				
+				List<FactionChunk> toGive = apToGive.get(slot);
+				toGive.remove(toGive.size()-1);
+				apToGive.put(slot, toGive);
+				updateCurrentItem(slot);
+				
+				System.out.println("updating ! removeUnit");
+				totalSell--;
+				totalMoneySell -= req.getWantedPrice();
+				indicator(slot, false);
+				amountsRequests.put(req, amountsRequests.get(req) == null ? getInventory().getItem(slot).getAmount() : amountsRequests.get(req) - 1);
+				
+				if(amountsRequests.get(req) <= 0) {
+					amountsRequests.remove(req);
+				}
+				
+				updateBuyItem(isOffer);
+			}
 			
 		}
 	}
@@ -273,7 +393,7 @@ public class APTopGUI extends AbstractInventory {
 			}
 		} else {
 			if(totalSell > 0) {
-				newStack = ItemUtils.create("&aValider votre achat", new String[] {"&7Vous êtes sur le point de vendre&b " + totalBuy + "&7 de vos APs",
+				newStack = ItemUtils.create("&aValider votre achat", new String[] {"&7Vous êtes sur le point de vendre&b " + totalSell + "&7 de vos APs",
 						"&7Capital: &b" + faction.getFaction().getCapital() + "$",
 						"&7Gain: &b+" + totalMoneySell + "$",
 						"&7Après achat: &b" + (faction.getFaction().getCapital()+totalMoneySell) + "$",
@@ -295,7 +415,7 @@ public class APTopGUI extends AbstractInventory {
 				if(t != null || result == null || result.size() == 0) {
 					hasOffers = false;
 					topOffers = new ArrayList<>();
-					run(cb);
+					//run(cb);
 					return;
 				}
 				hasOffers = true;
@@ -315,14 +435,82 @@ public class APTopGUI extends AbstractInventory {
 	}
 	
 	private void loadRequests(Runnable cb, boolean sync) {
-		//TODO
+		
+		topRequests = null;
+		Requests.getAPRequests(4, new Callback<List<APRequest>>() {
+			@Override
+			public void call(Throwable t, List<APRequest> result) {
+				if(t != null || result == null || result.size() == 0) {
+					hasRequests = false;
+					topRequests = new ArrayList<>();
+					//run(cb);
+					return;
+				}
+				hasRequests = true;
+				topRequests = result;
+			}
+		});
+		
+		if(sync) {
+			while(topRequests == null) {
+				try {
+					Thread.sleep(3L);
+				} catch (InterruptedException e) { }
+			}
+		}
+		
 		printAll();
-		hasRequests = false;
 		run(cb);
 	}
 	
 	private void printAll() {
-		//PRINTING OFFERS
+		printOffers();
+		printRequests();
+	}
+	
+	private void printRequests() {
+		for(int index = 0; index < topRequests.size(); index++) {
+			APRequest offer = topRequests.get(index);
+			ItemStack head = ItemUtils.createHead("&7Faction: &6" + offer.getOwner().getName(), offer.getOwner().getLeader().getLastUsername());
+			ItemStack addToCart = ItemUtils.create("&aAjouter&7 ou&c retirer", new String[] {"", "&7> &bClic gauche&7 pour ajouter une unité", "&7> &bClic droit&7 pour retirer une unité"}, Material.STAINED_GLASS_PANE, 14);
+			ItemStack concerned = offer.createItemStack();
+			
+			ItemAction headAction = new ItemAction() {
+				@Override
+				public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
+					offer.getOwner().sendInfos(p);
+				}
+			};
+			ItemAction addAction = new ItemAction() {
+				@Override
+				public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
+					if(action == InventoryAction.PICKUP_HALF) {
+						removeUnit(false, slot);
+					} else {
+						addUnit(false, slot);
+					}
+				}
+			};
+			
+			ClickableItem clickHead = new ClickableItem(head, headAction);
+			ClickableItem clickAddToCart = new ClickableItem(addToCart, addAction);
+			ClickableItem block = new ClickableItem(concerned, null);
+			
+			ClickableItem[][] menu = new ClickableItem[1][3];
+			menu[0][0] = clickHead;
+			menu[0][1] = clickAddToCart;
+			menu[0][2] = block;
+			
+			MenuItem item = new MenuItem(menu);
+			int slot = getPrintSlot(index, false);
+			item.print(APTopGUI.this, slot);
+			
+			System.out.println("registred request at slot: " + (slot+1));
+			requestsBySlots.put(slot+1, offer);
+		}
+	}
+	
+	private void printOffers() {
 		for(int index = 0; index < topOffers.size(); index++) {
 			APOffer offer = topOffers.get(index);
 			ItemStack head = ItemUtils.createHead("&7Faction: &6" + offer.getFactionName(), offer.getOwner().getLeader().getLastUsername());
@@ -361,7 +549,6 @@ public class APTopGUI extends AbstractInventory {
 			
 			offersBySlots.put(slot+1, offer);
 		}
-		//TODO: PRINTING REQUESTS
 	}
 	
 	private int getPrintSlot(int listIndex, boolean isTheCheaper) {
@@ -380,11 +567,11 @@ public class APTopGUI extends AbstractInventory {
 				
 				found = true;
 				
-				if(!hasOffers && !hasRequests) {
+				/*if(!hasOffers && !hasRequests) {
 					goBack();
 					ChatUtils.sendMessage(p, "&cAucune offre ni demande n'ont été trouvées pour cet item :c");
 					return;
-				}
+				}*/
 				
 				if(hasOffers || hasRequests) {
 					if(back != null) {
@@ -395,9 +582,32 @@ public class APTopGUI extends AbstractInventory {
 				} else { 
 					goBack();
 					ChatUtils.sendMessage(p, "&cAucune offre ni demande n'ont été trouvées pour cet item :c");
+					return;
 				}
 			}
 		}, true);
+	}
+	
+	private void resetOffers() {
+		for(int slot : offersBySlots.keySet()) {
+			amounts.remove(offersBySlots.get(slot));
+			ItemStack base = getInventory().getItem(slot);
+			base.setAmount(1);
+			base.setDurability((short) 14);
+			getInventory().setItem(slot, base);
+		}
+		updateBuyItem(true);
+	}
+	
+	private void resetRequests() {
+		for(int slot : requestsBySlots.keySet()) {
+			amountsRequests.remove(requestsBySlots.get(slot));
+			ItemStack base = getInventory().getItem(slot);
+			base.setAmount(1);
+			base.setDurability((short) 14);
+			getInventory().setItem(slot, base);
+		}
+		updateBuyItem(true);
 	}
 	
 	public void regenerate() {

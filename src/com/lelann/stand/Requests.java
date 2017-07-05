@@ -16,6 +16,7 @@ import com.lelann.factions.api.FactionPlayer;
 import com.lelann.factions.database.Callback;
 import com.lelann.factions.database.Database;
 import com.lelann.stand.objects.APOffer;
+import com.lelann.stand.objects.APRequest;
 import com.lelann.stand.objects.StandFaction;
 import com.lelann.stand.objects.StandOffer;
 import com.lelann.stand.objects.StandPlayer;
@@ -241,6 +242,59 @@ public class Requests {
 		for(APOffer offer : standFaction.getOffers()) {
 			saveAPOffer(offer);
 		}
+	}
+
+	public static void saveAPRequest(APRequest req) {
+		getDB().updateAsynchrounously(req.getSQLString());
+	}
+
+	public static void getAPRequests(Faction faction, Callback<List<APRequest>> done) {
+		new Thread() {
+			@Override
+			public void run() {
+				Throwable t = null;
+				List<APRequest> result = new ArrayList<>();
+				
+				try {
+					String query = "SELECT * FROM sAPRequests WHERE owner=" + faction.getFactionId();
+					
+					ResultSet set = getDB().querySQL(query);
+					while(set.next()) {
+						result.add(new APRequest(set));
+					}
+				} catch (Throwable throwable) {
+					t = throwable;
+				}
+				
+				done.call(t, result);
+			}
+		}.start();
+		
+	}
+
+	public static void saveAPRequests(StandFaction faction) {
+		for(APRequest req : faction.getRequests()) {
+			saveAPRequest(req);
+		}
+	}
+
+	public static List<APRequest> aprequests() {
+		List<APRequest> base = new ArrayList<>();
+		for(APRequest apReq : StandFaction.allRequests) {
+			base.add(apReq);
+		}
+		return base;
+	}
+	
+	public static void getAPRequests(int limit, Callback<List<APRequest>> done) {
+		List<APRequest> aps = aprequests();
+		if(aps == null) done.call(new Throwable("Pas de demandes d'APs."), null);
+		List<APRequest> base = aprequests();
+		base.sort(Comparator.comparing(APRequest::getWantedPrice));
+		Collections.reverse(base);
+		base = base.subList(0, limit >= aps.size() ? aps.size() : limit);
+		done.call(null, base);
+		
 	}
 	
 }

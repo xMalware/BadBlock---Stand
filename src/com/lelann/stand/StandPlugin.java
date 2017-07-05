@@ -185,6 +185,7 @@ public class StandPlugin extends JavaPlugin {
 		}
 		
 		System.out.println(StandFaction.allOffers.size() + " apoffers loaded !");
+		System.out.println(StandFaction.allRequests.size() + " aprequests loaded !");
 		
 		new StandConfiguration(getConfig());
 		saveConfig();

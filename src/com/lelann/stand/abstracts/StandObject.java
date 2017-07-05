@@ -79,6 +79,10 @@ public abstract class StandObject {
 		ChatUtils.sendMessage(sender, PREFIX_FACTION + message);
 	}
 	
+	protected void sendMessage(CommandSender sender, String message) {
+		ChatUtils.sendMessage(sender, PREFIX + message);
+	}
+	
 	public boolean validId(String id) {
 		try {
 			getMaterial(id);

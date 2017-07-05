@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import com.lelann.stand.Requests;
+import com.lelann.stand.objects.StandOffer;
 import com.lelann.stand.objects.StandPlayer;
 import com.lelann.stand.objects.StandRequest;
 
@@ -52,22 +53,31 @@ public class Buy extends AbstractCommand {
 			
 			if(!player.getWaiting().containsKey(request) || player.getWaiting().get(request) <= 0)
 				return;
-			
-			int emptySlots = 0;
-			for(int i = 0; i < p.getInventory().getSize(); i++) {
-				if(p.getInventory().getItem(i) == null) emptySlots++;
-			}
-			
+
 			int amount = player.getWaiting().get(request);
 			ItemStack concerned = request.createItemStack(amount);
 			concerned.setAmount(amount);
 			
-			int needed = (amount / concerned.getMaxStackSize());
+			/* --- */
 			
-			if(emptySlots < needed) {
+			int findedPlace = 0;
+
+			for(int slot = 0; slot < p.getInventory().getSize(); slot++) {
+				if(p.getInventory().getItem(slot) == null) {
+					findedPlace++;
+				}
+			}
+			
+			int neededPlace = (amount / concerned.getMaxStackSize()) + (amount % concerned.getMaxStackSize() == 0 ? 0 : 1);
+			
+			if(findedPlace < neededPlace) {
 				sendMessage(sender, "&cVous n'avez pas assez de place dans votre inventaire.");
 				return;
 			}
+			
+			/* --- */
+			
+			System.out.println("needed : " + neededPlace);
 			
 			p.getInventory().addItem(concerned);
 			sendMessage(sender, "&7Vous avez obtenu vos items !");
@@ -227,15 +237,10 @@ public class Buy extends AbstractCommand {
 	}
 	
 	private ItemStack getItemSpecified(CommandSender sender, String item) {
-		// POSIBILITÉS: 
-		// /stand buy stone
-		// /stand buy stone:2
-		// /stand buy 1
-		// /stand buy 1:2
 		ItemStack stack = null;
 		if(item.contains(":")) {
 			String idStr = item.split(":")[0];
-			String dataStr = item.split(":")[0];
+			String dataStr = item.split(":")[1];
 			
 			if(!validNumber(dataStr)) {
 				sendMessage(sender, "&cItem invalide (" + idStr + ":&l" + dataStr + "&c)");

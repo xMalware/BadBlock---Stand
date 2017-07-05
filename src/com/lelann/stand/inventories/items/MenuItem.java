@@ -19,6 +19,7 @@ public class MenuItem {
 				ClickableItem current = items[height][index];
 				current.setSlot(currentSlot);
 				gui.addClickable(currentSlot, current);
+				System.out.println("Printing item: " + startSlot + ", item: " + current.getItem().getType());
 			}
 		}
 	}

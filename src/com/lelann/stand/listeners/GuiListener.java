@@ -22,6 +22,7 @@ public class GuiListener extends StandObject implements Listener {
 	public void guiClick(InventoryClickEvent e) {
 		AbstractInventory gui = InventoryManager.getClickedGui(e);
 		if(gui == null) {
+			System.out.println("gui is null");
 			return;
 		}
 		
@@ -31,6 +32,9 @@ public class GuiListener extends StandObject implements Listener {
 		//System.out.println("èh: " + e.getClickedInventory().getTitle() + ", item: " + e.getCurrentItem());
 		
 		ClickableItem item = gui.getItem(e.getSlot());
+		
+		System.out.println("test: " + (item == null ? "ITEM NULL" : item.getSlot()) + " clicked for clickableitem in gui");
+		
 		if(item != null && item.getAction() != null && (gui.isActive() || e.getSlot() >= gui.getSize()-9))
 			item.getAction().run((Player) e.getWhoClicked(), e.getCurrentItem(), e.getSlot(), e.getAction());
 		

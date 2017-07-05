@@ -1,6 +1,7 @@
 package com.lelann.stand.inventories;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.bukkit.Material;
@@ -28,6 +29,10 @@ public class APGui extends AbstractInventory {
 	private StandPlayer viewer;
 	private StandFaction faction;
 	
+	private boolean selecting = false;
+	private Callback<FactionChunk> selectCallback;
+	private List<FactionChunk> selected;
+	
 	private Map<Integer, FactionChunk> APsBySlot = new HashMap<>();
 	
 	public APGui(StandPlayer viewer, StandFaction faction) {
@@ -36,6 +41,17 @@ public class APGui extends AbstractInventory {
 						viewer.getPlayer());
 		this.faction = faction;
 		this.viewer = viewer;
+		
+		setup();
+	}
+	
+	public APGui(StandPlayer viewer, StandFaction faction, boolean selecting) {
+		super("&7Séléctionnez un AP", 
+				(faction.getFaction().getApChunkNumber() + (faction.getFaction().getApChunkNumber() % 9 == 0 ? 0 : 9 - (faction.getFaction().getApChunkNumber() % 9))) + 9,
+						viewer.getPlayer());
+		this.faction = faction;
+		this.viewer = viewer;
+		this.selecting = selecting;
 		
 		setup();
 	}
@@ -51,36 +67,52 @@ public class APGui extends AbstractInventory {
 		int slot = 0;
 		for(FactionChunk ap : faction.getFaction().getAPs(viewer.getPlayer().getWorld().getName())) {
 			if(!ap.isAp()) continue;
-			if(!ap.isOnSale()) {
-				ItemStack apStack = ItemUtils.create("&6" + ap.toString(), new String[] {
-						"&7> &bClic droit&7 pour vendre votre AP",
-						"&7> &bClic gauche&7 pour vous tp à votre AP"}, Material.OBSIDIAN);
-				addClickable(slot, new ClickableItem(apStack, new ItemAction() {
-					
-					@Override
-					public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
-						if(action == InventoryAction.PICKUP_HALF) {
-							sellAp(slot);
-						} else {
-							tpToAp(slot, p);
-						}
+			if(!selecting) {
+				if(!ap.isOnSale()) {
+					ItemStack apStack = ItemUtils.create("&6" + ap.toString(), new String[] {
+							"&7> &bClic droit&7 pour vendre votre AP",
+							"&7> &bClic gauche&7 pour vous tp à votre AP"}, Material.OBSIDIAN);
+					addClickable(slot, new ClickableItem(apStack, new ItemAction() {
 						
-					}
-				}));
+						@Override
+						public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
+							if(action == InventoryAction.PICKUP_HALF) {
+								sellAp(slot);
+							} else {
+								tpToAp(slot, p);
+							}
+							
+						}
+					}));
+				} else {
+					if(selected != null && selected.contains(ap)) continue;
+					ItemStack apStack = ItemUtils.create("&6" + ap.toString() + "&7 [&cEN VENTE&7]", new String[] {
+							"&7> &bClic droit&7 pour annuler la vente",
+							"&7> &bClic gauche&7 pour vous tp à votre AP"}, Material.OBSIDIAN);
+					addClickable(slot, new ClickableItem(apStack, new ItemAction() {
+						
+						@Override
+						public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
+							if(action == InventoryAction.PICKUP_HALF) {
+								unsellAp(slot);
+							} else {
+								tpToAp(slot, p);
+							}
+							
+						}
+					}));
+				}
 			} else {
-				ItemStack apStack = ItemUtils.create("&6" + ap.toString() + "&7 [&cEN VENTE&7]", new String[] {
-						"&7> &bClic droit&7 pour annuler la vente",
-						"&7> &bClic gauche&7 pour vous tp à votre AP"}, Material.OBSIDIAN);
+				ItemStack apStack = ItemUtils.create("&6" + ap.toString(), new String[] {
+						"&7> &bClique&7 pour séléctionner cet AP"}, Material.OBSIDIAN);
 				addClickable(slot, new ClickableItem(apStack, new ItemAction() {
 					
 					@Override
 					public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
-						if(action == InventoryAction.PICKUP_HALF) {
-							unsellAp(slot);
-						} else {
-							tpToAp(slot, p);
-						}
-						
+						goBack();
+						selectCallback.call(null, APsBySlot.get(slot));
+						selectCallback = null;
+						selecting = false;
 					}
 				}));
 			}
@@ -154,6 +186,12 @@ public class APGui extends AbstractInventory {
 		sendFMessage("&eTéléporté !");
 	}
 	
+	public void openSelect(AbstractInventory back, List<FactionChunk> selected, Callback<FactionChunk> done) {
+		this.selectCallback = done;
+		this.selected = selected;
+		back.displayGui(this);
+	}
+	
 	/* ----------- UNUSED ------------ */
 
 	@Override
@@ -164,5 +202,6 @@ public class APGui extends AbstractInventory {
 
 	@Override
 	public void onClose(Player p) { }
+
 	
 }

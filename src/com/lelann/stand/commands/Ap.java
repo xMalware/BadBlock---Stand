@@ -10,8 +10,8 @@ import com.lelann.factions.api.FactionPlayer;
 import com.lelann.factions.listeners.MoveListener;
 import com.lelann.factions.utils.Title;
 import com.lelann.stand.StandPlugin;
-import com.lelann.stand.inventories.APGui;
 import com.lelann.stand.objects.APOffer;
+import com.lelann.stand.objects.APRequest;
 import com.lelann.stand.objects.StandFaction;
 import com.lelann.stand.objects.StandPlayer;
 
@@ -63,12 +63,12 @@ public class Ap extends AbstractCommand {
 			int price = Integer.parseInt(args[2]);
 			
 			if(price < MIN_PRICE) {
-				sendFMessage(sender, "&cPrix invalide. Montant minimum: 2000");
+				sendFMessage(sender, "&cPrix invalide. Montant minimum: " + MIN_PRICE);
 				return;
 			}
 			
 			if(price > MAX_PRICE) {
-				sendFMessage(sender, "&cPrix invalide. Montant maximal: 300000");
+				sendFMessage(sender, "&cPrix invalide. Montant maximal: " + MAX_PRICE);
 				return;
 			}
 			
@@ -77,7 +77,27 @@ public class Ap extends AbstractCommand {
 			
 		} else if(args[0].equalsIgnoreCase("buy")) {
 			
+			if(!validNumber(args[1])) {
+				return;
+			}
 			
+			int price = getNumber(args[1]);
+			int amount = getNumber(args[2]);
+			
+			int totalRequested = 0;
+			for(APRequest req : faction.getRequests()) {
+				totalRequested += req.getWantedAmount();
+			}
+			
+			if(totalRequested + amount > 4) {
+				sendFMessage(sender, "&cVous allez dépasser la limite de 4 APs par achat en faisant cela !");
+				return;
+			}
+			
+			APRequest request = new APRequest(f, price, amount);
+			faction.addRequest(request);
+			
+			f.sendMessage("&c" + sender.getName() + "&e a crée une demande pour tenter d'obtenir &c" + amount + "&e APs à &c" + price + "$ &echacun !");
 			
 		} else if(args[0].equalsIgnoreCase("sendtitleaponsale")) {
 			String c = args[1];
