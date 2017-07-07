@@ -1,5 +1,6 @@
 package com.lelann.stand.inventories;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,7 @@ public class APGui extends AbstractInventory {
 	
 	private boolean selecting = false;
 	private Callback<FactionChunk> selectCallback;
-	private List<FactionChunk> selected;
+	private List<FactionChunk> selected = new ArrayList<>();
 	
 	private Map<Integer, FactionChunk> APsBySlot = new HashMap<>();
 	

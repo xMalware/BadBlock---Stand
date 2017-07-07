@@ -163,7 +163,7 @@ public class TopGUI extends AbstractInventory {
 			int priceForPlayer = amount * selling.getWantedPrice();
 			
 			//removing money and adding items
-			player.add(priceForPlayer);
+			player.add(priceForPlayer - (int) taxe(priceForPlayer));
 			owner.remove(priceForOwner);
 			
 			selling.remove(amount);
@@ -191,7 +191,7 @@ public class TopGUI extends AbstractInventory {
 			owner.getWaiting().put(selling, owner.getWaiting().get(selling) == null ? amount : owner.getWaiting().get(selling) + amount);
 			removeItems(item, getPlayer().getInventory(), amount);
 			
-			player.sendMessage(PREFIX + "Vous venez de vendre &a" + amount + " " + selling.getName() + "&7 à &a" + p.getLastUsername() + "&7 pour &a" + priceForPlayer + "$&7 !");
+			player.sendMessage(PREFIX + "Vous venez de vendre &a" + amount + " " + selling.getName() + "&7 à &a" + p.getLastUsername() + "&7 pour &a" + (priceForPlayer - (int) taxe(priceForPlayer)) + "$&7 ! TAXE: &a10%&7 (&a" + taxe(priceForPlayer) + "$7 en tout)");
 			
 			Requests.savePlayer(player);
 			Requests.savePlayer(owner);
@@ -323,7 +323,7 @@ public class TopGUI extends AbstractInventory {
 			
 			if(getInventory().getItem(slot).getAmount() < request.getWantedAmount() || getInventory().getItem(slot).getDurability() == 14) {
 				totalSell++;
-				totalMoneySell += request.getWantedPrice();
+				totalMoneySell += request.getWantedPrice() - taxe(request.getWantedPrice());
 				indicator(slot, true);
 				requestAmounts.put(request, requestAmounts.get(request) == null ? getInventory().getItem(slot).getAmount() : requestAmounts.get(request) + 1);
 				updateBuyItem(isOffer);
@@ -542,7 +542,9 @@ public class TopGUI extends AbstractInventory {
 		ItemStack addToCart = ItemUtils.create("&aAjouter&7 ou&c retirer", new String[] {"", "&7> &bClic gauche&7 pour ajouter une unité", "&7> &bClic droit&7 pour retirer une unité"}, Material.STAINED_GLASS_PANE, 14);
 		ItemStack concerned = ItemUtils.create("&7Acheteur: &b" + name, new String[] {
 				"&7Quantité demandée: &b" + request.getWantedAmount(),
-				"&7Prix voulu: &b" + request.getWantedPrice() + "$"}, request.getType(), request.getWantedAmount(), request.getData());
+				"&7Prix voulu: &b" + request.getWantedPrice() + "$",
+				"&7Vous receverez: &b" + (request.getWantedPrice() - taxe(request.getWantedPrice())) + "$",
+				"&7Taxe: &b" + taxe(request.getWantedPrice())}, request.getType(), request.getWantedAmount(), request.getData());
 		
 		ClickableItem clickHead = new ClickableItem(head, new ItemAction() {
 			

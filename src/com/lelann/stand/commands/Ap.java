@@ -137,6 +137,11 @@ public class Ap extends AbstractCommand {
 				return;
 			}
 			
+			if(faction.getFaction().getCapital() < (price * amount)) {
+				sendFMessage(sender, "&cVous n'avez pas assez de capital pour pouvoir demander " + amount + " APs !");
+				return;
+			}
+			
 			APRequest request = new APRequest(f, price, amount);
 			faction.addRequest(request);
 			

@@ -10,6 +10,8 @@ import com.lelann.factions.api.Faction;
 import com.lelann.factions.api.FactionChunk;
 import com.lelann.factions.utils.ItemUtils;
 import com.lelann.stand.abstracts.StandObject;
+import com.lelann.stand.selection.MathsUtils;
+import com.sk89q.worldguard.util.MathUtils;
 
 import fr.devhill.socketinventory.json.bukkit.JSON;
 import fr.devhill.socketinventory.json.elements.JObject;
@@ -62,6 +64,7 @@ public class APOffer extends StandObject {
 	public ItemStack createItemStack() {
 		ItemStack base = ItemUtils.create(getName(), new String[] {
 				"&7Prix: &6" + getPrice() + "$",
+				"&7Taxe: &6" + MathsUtils.round(getPrice() * 0.10, 2) + "$",
 				"&7Détails de l'AP", "&8-----------", "&7x: &6" + ap.getX(),
 				"&7z: &6" + ap.getZ(), "&7Faction: &6" + ap.getOwner().getName()}, Material.OBSIDIAN);
 		return base;

@@ -66,7 +66,9 @@ public class APRequest extends StandObject {
 	
 	public ItemStack createItemStack() {
 		ItemStack base = ItemUtils.create(getName(), new String[] {
-				"&7Prix voulu: &6" + getWantedPrice() + "$"}, Material.OBSIDIAN);
+				"&7Prix voulu: &6" + getWantedPrice() + "$",
+				"&7Vous receverez: &6" + (getWantedPrice() - MathsUtils.round(getWantedPrice() * 0.10, 2)) + "$",
+				"&7Taxe: &6" + MathsUtils.round(getWantedPrice() * 0.10, 2) + "$"}, Material.OBSIDIAN);
 		base.setAmount(getWantedAmount());
 		return base;
 	}
