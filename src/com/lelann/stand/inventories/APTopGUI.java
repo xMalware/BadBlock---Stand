@@ -19,6 +19,7 @@ import com.lelann.factions.api.FactionChunk;
 import com.lelann.factions.database.Callback;
 import com.lelann.factions.utils.ChatUtils;
 import com.lelann.factions.utils.ItemUtils;
+import com.lelann.factions.utils.StringUtils;
 import com.lelann.stand.Requests;
 import com.lelann.stand.StandPlugin;
 import com.lelann.stand.inventories.abstracts.AbstractInventory;
@@ -41,7 +42,7 @@ public class APTopGUI extends AbstractInventory {
 	private Map<APRequest, Integer> amountsRequests = new HashMap<>();
 	private Map<Integer, APRequest> requestsBySlots = new HashMap<>();
 	
-	private Map<Integer, List<FactionChunk>> apToGive = new HashMap<>();
+	private Map<APRequest, List<FactionChunk>> apToGive = new HashMap<>();
 	
 	private int totalBuy, totalSell, totalMoneyBuy, totalMoneySell = 0;
 	
@@ -88,31 +89,82 @@ public class APTopGUI extends AbstractInventory {
 	}
 	
 	private void sellSelectedItems() {
-		if(amounts.isEmpty()) {
+		if(amountsRequests.isEmpty()) {
 			sendFMessage("&cVous devez sélectionner au moins un item avant de continuer.");
 			return;
 		}
 		
-		if(fac.getApChunkNumber() >= 4) {
-			sendFMessage("&cVous avez atteint le nombre maximal d'APs que vous pouvez acheter.");
-			regenerate();
-			return;
-		}
-		
-		if(fac.getApChunkNumber() + totalBuy > 4) {
-			sendFMessage("&cVous allez dépasser la limite d'APs en faisant ceci.");
-			regenerate();
-			return;
-		}
-		
-		if(!canBuyAll()) {
-			sendFMessage("&cVous n'avez pas assez de capital pour tout acheter !");
-			regenerate();
-			return;
-		}
-		
-		for(APOffer selling : amounts.keySet()) {
+		for(APRequest selling : amountsRequests.keySet()) {
+			StandFaction current = StandPlugin.get().getStandFaction(selling.getOwner());
+			Faction other = selling.getOwner();
+			int gived = amountsRequests.get(selling);
+			List<FactionChunk> apsGived = apToGive.get(selling);
 			
+			if(current.getFaction().getCapital() < (selling.getWantedPrice() * gived)) {
+				if(gived > 0) {
+					fac.sendMessage("&eVous n'avez pas pu vendre les APs &c"
+							+ StringUtils.join(apsGived, " &f+&c ") + "&e à la faction &c" + selling.getOwner().getName() + "&e (Capital trop faible !)");
+				} else {
+					fac.sendMessage("&eVous n'avez pas pu vendre l'AP &c" + apsGived.get(0).toString() + "&e (Capital trop faible !)");
+				}
+				continue;
+			}
+			
+			List<String> aps = new ArrayList<>();
+			
+			for(int i = 0; i < apsGived.size(); i++) {
+				FactionChunk toGive = apsGived.get(i);
+				
+				//faction.removeOffer(buying);
+				
+				toGive.setOnSale(false);
+				toGive.getAllowedMembers().clear();
+				toGive.setFactionId(other.getFactionId());
+
+				other.setChunkNumber(other.getChunkNumber() + 1);
+				other.setApChunkNumber(other.getApChunkNumber() + 1);
+				fac.setApChunkNumber(fac.getApChunkNumber() - 1);
+				fac.setChunkNumber(fac.getChunkNumber() - 1);
+				
+				//fac.addToCapital(selling.getWantedPrice());
+				//other.removeFromCapital(selling.getWantedPrice());
+				
+				other.updateScoreboard();
+				fac.updateScoreboard();
+				
+				//other.sendMessage(PREFIX + "%red%" + fac.getName() + "%yellow% a bien reçu votre AP !");
+				//fac.sendMessage(PREFIX + "%yellow%Vous avez bien reçu l'AP de %red%" + other.getName() + "%yellow% !");
+				
+				//other.sendMessage(PREFIX_FACTION + "&eVous avez vendu votre AP en &c" + c.toString() + "&e à &c" + fac.getName() + "&e pour &c" + buying.getPrice() + "$&e !");
+				//fac.sendMessage(PREFIX_FACTION + "&eVous avez acheté l'AP de &c" + other.getName() + "&e en &c" + c.toString() + "&e pour &c" + buying.getPrice() + "$&e !");
+
+				aps.add("&c- &eAP en &c" + toGive.toString());
+				
+				StandPlugin.get().getProtector().unprotect(toGive);
+				toGive.save(false); 
+			}
+			
+			fac.addToCapital(selling.getWantedPrice() * gived);
+			other.removeFromCapital(selling.getWantedPrice() * gived);
+			
+			fac.sendMessage("&eVous venez de vendre:");
+			fac.sendMessage(aps.toArray(new String[aps.size()]));
+			fac.sendMessage("&ePour la somme de &c" + (selling.getWantedPrice() * gived) + "$&e (&c" + selling.getWantedPrice() + "$&e chacun)");
+			
+			other.sendMessage("&eVous venez d'acheter:");
+			other.sendMessage(aps.toArray(new String[aps.size()]));
+			other.sendMessage("&ePour la somme de &c" + (selling.getWantedPrice() * gived) + "$&e (&c" + selling.getWantedPrice() + "$&e chacun)");
+			
+			selling.remove(gived);
+			if(selling.getWantedAmount() <= 0) {
+				current.removeRequest(selling);
+			}
+			
+			other.save(false);
+			fac.save(false); 
+			
+			current.save();
+			faction.save();
 			
 			//c.save(false); other.save(false); fac.save(false); faction.save();
 		}
@@ -179,6 +231,8 @@ public class APTopGUI extends AbstractInventory {
 			other.sendMessage(PREFIX_FACTION + "&eVous avez vendu votre AP en &c" + c.toString() + "&e à &c" + fac.getName() + "&e pour &c" + buying.getPrice() + "$&e !");
 			fac.sendMessage(PREFIX_FACTION + "&eVous avez acheté l'AP de &c" + other.getName() + "&e en &c" + c.toString() + "&e pour &c" + buying.getPrice() + "$&e !");
 
+			StandPlugin.get().getProtector().unprotect(c);
+			
 			c.save(false); other.save(false); fac.save(false); faction.save();
 		}
 		
@@ -208,10 +262,11 @@ public class APTopGUI extends AbstractInventory {
 				indicator(slot, true);
 				amounts.put(offer, amounts.get(offer) == null ? getInventory().getItem(slot).getAmount() : amounts.get(offer) + 1);
 				updateBuyItem(isOffer);
+			} else {
+				System.out.println("wtf");
 			}
 			
 		} else {
-			//todo
 			if(totalBuy > 0) {
 				totalBuy = 0;
 				resetOffers();
@@ -224,21 +279,21 @@ public class APTopGUI extends AbstractInventory {
 				return;
 			}
 			
-			if(getInventory().getItem(slot).getAmount() < 1 || getInventory().getItem(slot).getDurability() == 14) {
+			if(getInventory().getItem(slot).getAmount() < req.getWantedAmount() || getInventory().getItem(slot).getDurability() == 14) {
 				
 				if(requestsBySlots.get(slot).getOwner().getFactionId() == faction.getFaction().getFactionId()) return;
 				
 				APGui gui = new APGui(player, faction, true);
-				gui.openSelect(this, apToGive.get(slot), new Callback<FactionChunk>() {
+				gui.openSelect(this, apToGive.get(req), new Callback<FactionChunk>() {
 
 					@Override
 					public void call(Throwable t, FactionChunk result) {
 						
-						if(apToGive.get(slot) == null) apToGive.put(slot, new ArrayList<>());
+						if(apToGive.get(req) == null) apToGive.put(req, new ArrayList<>());
 						
-						List<FactionChunk> toGive = apToGive.get(slot);
+						List<FactionChunk> toGive = apToGive.get(req);
 						toGive.add(result);
-						apToGive.put(slot, toGive);
+						apToGive.put(req, toGive);
 						updateCurrentItem(slot);
 						
 						totalSell++;
@@ -257,17 +312,19 @@ public class APTopGUI extends AbstractInventory {
 	
 	private void updateCurrentItem(int slot) {
 		int cSlot = slot + 1;
+		//Req
+		APRequest req = requestsBySlots.get(slot);
 		//Concerned
 		ItemStack st = getInventory().getItem(cSlot);
 		ItemMeta meta = st.getItemMeta();
 		List<String> lore = meta.getLore().subList(0, 1);
-		if(apToGive.get(slot) != null && apToGive.get(slot).size() > 0) {
+		if(apToGive.get(req) != null && apToGive.get(req).size() > 0) {
 			lore.add("");
 			lore.add(ChatUtils.colorReplace("&7Vous vendez les APs:"));
-			List<FactionChunk> toGive = apToGive.get(slot);
+			List<FactionChunk> toGive = apToGive.get(req);
 			for(int pos = 0; pos < toGive.size(); pos++) {
 				FactionChunk c = toGive.get(pos);
-				lore.add(ChatUtils.colorReplace("&b" + (pos+1) + ") &7AP en " + c.toString()));
+				lore.add(ChatUtils.colorReplace("&b" + (pos+1) + ") &7AP en &b" + c.toString()));
 			}
 		}
 		meta.setLore(lore);
@@ -313,9 +370,9 @@ public class APTopGUI extends AbstractInventory {
 				
 				if(requestsBySlots.get(slot).getOwner().getFactionId() == faction.getFaction().getFactionId()) return;
 				
-				List<FactionChunk> toGive = apToGive.get(slot);
+				List<FactionChunk> toGive = apToGive.get(req);
 				toGive.remove(toGive.size()-1);
-				apToGive.put(slot, toGive);
+				apToGive.put(req, toGive);
 				updateCurrentItem(slot);
 				
 				System.out.println("updating ! removeUnit");
@@ -487,6 +544,7 @@ public class APTopGUI extends AbstractInventory {
 					if(action == InventoryAction.PICKUP_HALF) {
 						removeUnit(false, slot);
 					} else {
+						System.out.println("Adding unit for slot " + slot + " ! Opening ?");
 						addUnit(false, slot);
 					}
 				}

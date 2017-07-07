@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.entity.EntityEvent;
 import org.bukkit.event.player.PlayerEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
 
 import com.lelann.factions.utils.ChatUtils;
@@ -79,8 +78,16 @@ public abstract class StandObject {
 		ChatUtils.sendMessage(sender, PREFIX_FACTION + message);
 	}
 	
-	protected void sendMessage(CommandSender sender, String message) {
-		ChatUtils.sendMessage(sender, PREFIX + message);
+	protected void sendSMessage(Player p, String message) {
+		ChatUtils.sendMessage(p, PREFIX + message);
+	}
+	
+	protected void sendNMessage(Player p, String message) {
+		ChatUtils.sendMessage(p, message);
+	}
+	
+	protected void sendMessage(Player p, String msg) {
+		ChatUtils.sendMessage(p, PREFIX + msg);
 	}
 	
 	public boolean validId(String id) {

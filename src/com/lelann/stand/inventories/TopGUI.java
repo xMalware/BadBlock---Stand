@@ -19,6 +19,7 @@ import com.lelann.factions.database.Callback;
 import com.lelann.factions.utils.ChatUtils;
 import com.lelann.factions.utils.ItemUtils;
 import com.lelann.factions.utils.JRawMessage;
+import com.lelann.factions.utils.StringUtils;
 import com.lelann.factions.utils.JRawMessage.ClickEventType;
 import com.lelann.stand.Requests;
 import com.lelann.stand.StandPlugin;
@@ -142,6 +143,8 @@ public class TopGUI extends AbstractInventory {
 		for(StandRequest selling : requestAmounts.keySet()) {
 			if(requestAmounts.get(selling) <= 0) continue;
 			
+			int amount = requestAmounts.get(selling);
+			
 			if(selling.getOwner().equals(getPlayer().getUniqueId())) {
 				player.sendMessage("&cT'es un marrant toi, en fait.");
 				continue;
@@ -150,7 +153,12 @@ public class TopGUI extends AbstractInventory {
 			StandPlayer owner = selling.getPlayer(selling.getOwner());
 			FactionPlayer p = Main.getInstance().getPlayersManager().getPlayer(selling.getOwner());
 			
-			int amount = requestAmounts.get(selling);
+			if(owner.getMoney() < (selling.getWantedPrice() * amount)) {
+				sendSMessage(getPlayer(), "&cVous n'avez pas pu vendre l'item "
+						+ amount + " " + selling.getName() + " à " + p.getLastUsername() + " (Argent insuffisant !)");
+				continue;
+			}
+			
 			long priceForOwner = (long) (selling.getWantedPrice() * amount);
 			int priceForPlayer = amount * selling.getWantedPrice();
 			

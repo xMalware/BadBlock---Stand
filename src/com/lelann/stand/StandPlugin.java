@@ -25,8 +25,10 @@ import org.bukkit.projectiles.ProjectileSource;
 import com.lelann.factions.Main;
 import com.lelann.factions.api.Faction;
 import com.lelann.factions.api.FactionChunk;
+import com.lelann.factions.api.managers.ChunksManager;
 import com.lelann.stand.commands.CommandsManager;
 import com.lelann.stand.inventories.abstracts.Categories;
+import com.lelann.stand.listeners.APProtector;
 import com.lelann.stand.listeners.ApPNJListener;
 import com.lelann.stand.listeners.ApPNJManager;
 import com.lelann.stand.listeners.CategoryPNJListener;
@@ -51,6 +53,8 @@ public class StandPlugin extends JavaPlugin {
 	private Map<UUID, ArmorStand> stands;
 	private Map<UUID, StandPlayer> players;
 	private Map<Integer, StandFaction> factions = new HashMap<>();
+	
+	@Getter private APProtector protector;
 
 	@Getter private File pnj;
 	
@@ -137,7 +141,8 @@ public class StandPlugin extends JavaPlugin {
 		
 		manager = new CategoryPNJManager(Categories.loadCategories(pnj));
 		APManager = new ApPNJManager(Categories.loadAP());
-
+		protector = new APProtector(this).register();
+		
 		/*for(String key : config.getConfigurationSection("Pnjs").getKeys(false)){
 			try {
 				pnjs.add(new StandTopPNJ(config.getConfigurationSection("pnjs." + key)));
@@ -187,6 +192,18 @@ public class StandPlugin extends JavaPlugin {
 		System.out.println(StandFaction.allOffers.size() + " apoffers loaded !");
 		System.out.println(StandFaction.allRequests.size() + " aprequests loaded !");
 		
+		int p = 0;
+		for(ChunksManager manager : Main.getInstance().getChunksManagers()) {
+			for(FactionChunk chunk : manager.getChunks().values()) {
+				if(chunk.isProtected()) {
+					protector.protect(chunk);
+					p++;
+				}
+			}
+		}
+		
+		System.out.println(p + " APs protections loaded !");
+		
 		new StandConfiguration(getConfig());
 		saveConfig();
 
@@ -196,7 +213,7 @@ public class StandPlugin extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(new StandListener(players), this);
 		getServer().getPluginManager().registerEvents(new GeneralListener(), this);
 		getServer().getPluginManager().registerEvents(new ChatListener(), this);
-
+		
 		new CommandsManager();
 	}
 
@@ -219,7 +236,9 @@ public class StandPlugin extends JavaPlugin {
 	}
 	
 	public void removeStandFaction(Faction faction) {
-		factions.remove(getStandFaction(faction));
+		StandFaction fac = getStandFaction(faction);
+		fac.deleteAll();
+		factions.remove(fac);
 	}
 	
 	public StandFaction getStandFaction(Faction faction) {
@@ -230,6 +249,8 @@ public class StandPlugin extends JavaPlugin {
 		StandFaction faction = getStandFaction(f);
 		Main.getInstance().getChunksManager(chunk.getWorld()).setOnSale(chunk, true);
 		Main.getInstance().getChunksManager(chunk.getWorld()).saveChunk(chunk, true);
+		
+		protector.protect(chunk);
 		
 		APOffer offer = new APOffer(f, chunk, price);
 		faction.addOffer(offer);
@@ -243,6 +264,9 @@ public class StandPlugin extends JavaPlugin {
 		faction.removeOffer(offer);
 		Main.getInstance().getChunksManager(chunk.getWorld()).setOnSale(chunk, false);
 		Main.getInstance().getChunksManager(chunk.getWorld()).saveChunk(chunk, true);
+		
+		protector.unprotect(chunk);
+		
 		faction.save();
 		faction.getFaction().save(false);
 	}

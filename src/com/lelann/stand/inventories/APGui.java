@@ -42,7 +42,7 @@ public class APGui extends AbstractInventory {
 		this.faction = faction;
 		this.viewer = viewer;
 		
-		setup();
+		//setup();
 	}
 	
 	public APGui(StandPlayer viewer, StandFaction faction, boolean selecting) {
@@ -53,7 +53,7 @@ public class APGui extends AbstractInventory {
 		this.viewer = viewer;
 		this.selecting = selecting;
 		
-		setup();
+		//setup();
 	}
 	
 	private void setup() {
@@ -63,8 +63,14 @@ public class APGui extends AbstractInventory {
 		printAPs();
 	}
 	
+	private boolean hasAps = false;
 	private void printAPs() {
 		int slot = 0;
+		if(faction.getFaction().getApChunkNumber() == 0) {
+			hasAps = false;
+			return;
+		}
+		hasAps = true;
 		for(FactionChunk ap : faction.getFaction().getAPs(viewer.getPlayer().getWorld().getName())) {
 			if(!ap.isAp()) continue;
 			if(!selecting) {
@@ -85,7 +91,6 @@ public class APGui extends AbstractInventory {
 						}
 					}));
 				} else {
-					if(selected != null && selected.contains(ap)) continue;
 					ItemStack apStack = ItemUtils.create("&6" + ap.toString() + "&7 [&cEN VENTE&7]", new String[] {
 							"&7> &bClic droit&7 pour annuler la vente",
 							"&7> &bClic gauche&7 pour vous tp à votre AP"}, Material.OBSIDIAN);
@@ -103,6 +108,7 @@ public class APGui extends AbstractInventory {
 					}));
 				}
 			} else {
+				if(selected != null && selected.contains(ap)) continue;
 				ItemStack apStack = ItemUtils.create("&6" + ap.toString(), new String[] {
 						"&7> &bClique&7 pour séléctionner cet AP"}, Material.OBSIDIAN);
 				addClickable(slot, new ClickableItem(apStack, new ItemAction() {
@@ -184,6 +190,17 @@ public class APGui extends AbstractInventory {
 		
 		p.teleport(APUtils.getTpLoc(p.getWorld().getName(), current.getX(), current.getZ()));
 		sendFMessage("&eTéléporté !");
+	}
+	
+	@Override
+	public void show() {
+		setup();
+		if(!hasAps) {
+			//goBack();
+			sendNMessage(getPlayer(), "&cVous n'avez pas d'APs.");
+			return;
+		}
+		super.show();
 	}
 	
 	public void openSelect(AbstractInventory back, List<FactionChunk> selected, Callback<FactionChunk> done) {

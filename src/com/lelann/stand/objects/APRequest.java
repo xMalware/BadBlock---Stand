@@ -53,8 +53,9 @@ public class APRequest extends StandObject {
 
 	public String getSQLString(){
 		if(wantedAmount <= 0) {
+			System.out.println("DELETING REQUEST !");
 			toCreate = true;
-			return "DELETE FROM sAPRequests WHERE owner=" + owner.getFactionId();
+			return "DELETE FROM sAPRequests WHERE owner=" + owner.getFactionId() + " AND initialamount=" + initialAmount;
 		} else if(toCreate){
 			toCreate = false;
 			return "INSERT INTO sAPRequests(owner, initialamount, wantedamount, gived, wantedprice) VALUES(" + owner.getFactionId() + ", " + initialAmount + ", " + wantedAmount + ", " + gived + ", " + wantedPrice + ")";
@@ -66,6 +67,7 @@ public class APRequest extends StandObject {
 	public ItemStack createItemStack() {
 		ItemStack base = ItemUtils.create(getName(), new String[] {
 				"&7Prix voulu: &6" + getWantedPrice() + "$"}, Material.OBSIDIAN);
+		base.setAmount(getWantedAmount());
 		return base;
 	}
 

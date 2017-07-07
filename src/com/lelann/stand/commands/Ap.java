@@ -41,7 +41,33 @@ public class Ap extends AbstractCommand {
 		
 		if(args.length == 0) return;
 		
-		if(args[0].equalsIgnoreCase("list")) {
+		if(args[0].equalsIgnoreCase("removerequest")) {
+			
+			String total = args[1];
+			String[] parts = total.split(":");
+			int initial = getNumber(parts[0]);
+			int wanted = getNumber(parts[1]);
+			int gived = getNumber(parts[2]);
+			
+			APRequest found = null;
+			for(APRequest req : faction.getRequests()) {
+				if(req.getInitialAmount() == initial
+						&& req.getWantedAmount() == wanted
+						&& req.getGived() == gived) {
+					found = req;
+					break;
+				}
+			}
+			
+			if(found == null) return;
+			
+			found.setWantedAmount(0);
+			faction.removeRequest(found);
+			faction.save();
+			
+			sendFMessage(sender, "&eDemande supprimée !");
+			
+		} else if(args[0].equalsIgnoreCase("list")) {
 			
 			faction.openGui(player);
 			
@@ -77,6 +103,13 @@ public class Ap extends AbstractCommand {
 			
 		} else if(args[0].equalsIgnoreCase("buy")) {
 			
+			
+			
+			if(args.length >= 2 && args[1].equalsIgnoreCase("list")) {
+				faction.sendList(sender);
+				return;
+			}
+			
 			if(!validNumber(args[1])) {
 				return;
 			}
@@ -89,7 +122,17 @@ public class Ap extends AbstractCommand {
 				totalRequested += req.getWantedAmount();
 			}
 			
-			if(totalRequested + amount > 4) {
+			if(faction.getFaction().getApChunkNumber() >= 4) {
+				sendFMessage(sender, "&cVous avez déja accumulé plus de 4 APs ! Vous ne pouvez pas en demander plus !");
+				return;
+			}
+			
+			if(faction.getFaction().getApChunkNumber() + totalRequested >= 4) {
+				sendFMessage(sender, "&cVous êtes déjà en train de demander plusieurs APs vous faisant atteindre la limite de 4 APs.");
+				return;
+			}
+			
+			if(faction.getFaction().getApChunkNumber() + totalRequested + amount > 4) {
 				sendFMessage(sender, "&cVous allez dépasser la limite de 4 APs par achat en faisant cela !");
 				return;
 			}

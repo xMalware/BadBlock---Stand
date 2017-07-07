@@ -40,7 +40,6 @@ public class APOffer extends StandObject {
 			this.serializable = JSON.loadFromString(set.getString("ap"));
 			this.price = set.getInt("price");
 			this.owner = Main.getInstance().getFactionsManager().getFaction(set.getInt("owner"));
-			System.out.println("FACID: " + owner.getFactionId());
 			this.ap = JSON.saveAsObject(serializable, FactionChunk.class);
 			this.toCreate = false;
 			this.remove = false;
