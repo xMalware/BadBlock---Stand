@@ -16,6 +16,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import com.lelann.factions.Main;
 import com.lelann.factions.api.Faction;
 import com.lelann.factions.api.FactionChunk;
+import com.lelann.factions.api.managers.ChunksManager;
 import com.lelann.factions.database.Callback;
 import com.lelann.factions.utils.ChatUtils;
 import com.lelann.factions.utils.ItemUtils;
@@ -122,7 +123,7 @@ public class APTopGUI extends AbstractInventory {
 			for(int i = 0; i < apsGived.size(); i++) {
 				FactionChunk toGive = apsGived.get(i);
 				
-				toGive.setOnSale(false);
+				Main.getInstance().getChunksManager(toGive.getWorld()).setOnSale(toGive, false);
 				toGive.getAllowedMembers().clear();
 				toGive.setFactionId(other.getFactionId());
 
@@ -203,11 +204,12 @@ public class APTopGUI extends AbstractInventory {
 			Faction other = buying.getOwner();
 			FactionChunk c = buying.getAp();
 			
-			faction.removeOffer(buying);
-			
-			c.setOnSale(false);
+			//c.setOnSale(false);
+			System.out.println("BUYING CHUNK AT " + c.toString() + ", BEFORE: ONSALE=" + c.isOnSale());
+			Main.getInstance().getChunksManager(c.getWorld()).setOnSale(c, false);
 			c.getAllowedMembers().clear();
 			c.setFactionId(fac.getFactionId());
+			System.out.println("BUYING CHUNK AT " + c.toString() + ", AFTER: ONSALE=" + c.isOnSale());
 
 			other.setChunkNumber(other.getChunkNumber() - 1);
 			other.setApChunkNumber(other.getApChunkNumber() - 1);
@@ -223,6 +225,7 @@ public class APTopGUI extends AbstractInventory {
 			fac.sendMessage(PREFIX_FACTION + "&eVous avez acheté l'AP de &c" + other.getName() + "&e en &c" + c.toString() + "&e pour &c" + (buying.getPrice() + (int) taxe(buying.getPrice())) + "$&e !");
 
 			StandPlugin.get().getProtector().unprotect(c);
+			faction.removeOffer(buying);
 			
 			c.save(false); other.save(false); fac.save(false); faction.save();
 		}

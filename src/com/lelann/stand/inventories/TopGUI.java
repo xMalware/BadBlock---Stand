@@ -610,12 +610,12 @@ public class TopGUI extends AbstractInventory {
 			@Override
 			public void run() {
 				
+				found = true;
+				
 				if(totalPrinted <= 0) {
 					sendMessage("&cUne erreur est survenue : des offres ont été trouvées mais n'ont pas pu être affichées.");
 					return;
 				}
-				
-				found = true;
 				
 				if(!hasOffers && !hasRequests) {
 					goBack();

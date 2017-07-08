@@ -193,16 +193,21 @@ public class StandPlugin extends JavaPlugin {
 		System.out.println(StandFaction.allRequests.size() + " aprequests loaded !");
 		
 		int p = 0;
+		int s = 0;
 		for(ChunksManager manager : Main.getInstance().getChunksManagers()) {
 			for(FactionChunk chunk : manager.getChunks().values()) {
 				if(chunk.isProtected()) {
 					protector.protect(chunk);
 					p++;
 				}
+				if(chunk.isOnSale()) {
+					s++;
+				}
 			}
 		}
 		
 		System.out.println(p + " APs protections loaded !");
+		System.out.println(s + " APs on sale loaded !");
 		
 		new StandConfiguration(getConfig());
 		saveConfig();
