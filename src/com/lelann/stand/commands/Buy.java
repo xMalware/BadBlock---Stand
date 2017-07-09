@@ -77,8 +77,6 @@ public class Buy extends AbstractCommand {
 			
 			/* --- */
 			
-			System.out.println("needed : " + neededPlace);
-			
 			p.getInventory().addItem(concerned);
 			sendMessage(sender, "&7Vous avez obtenu vos items !");
 			

@@ -33,7 +33,7 @@ public class GuiListener extends StandObject implements Listener {
 		
 		ClickableItem item = gui.getItem(e.getSlot());
 		
-		System.out.println("test: " + (item == null ? "ITEM NULL" : item.getSlot()) + " clicked for clickableitem in gui");
+		//System.out.println("test: " + (item == null ? "ITEM NULL" : item.getSlot()) + " clicked for clickableitem in gui");
 		
 		if(item != null && item.getAction() != null && (gui.isActive() || e.getSlot() >= gui.getSize()-9))
 			item.getAction().run((Player) e.getWhoClicked(), e.getCurrentItem(), e.getSlot(), e.getAction());

@@ -35,7 +35,6 @@ public class APProtector extends FactionObject implements Listener {
 	}
 	
 	public void protect(FactionChunk ap) {
-		System.out.println("PROTECTING CHUNK " + ap.toString());
 		protecteds.put(ap.getChunk(), ap);
 		ap.setProtected(true);
 	}

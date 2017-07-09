@@ -73,8 +73,6 @@ public class Ap extends AbstractCommand {
 			
 		} else if(args[0].equalsIgnoreCase("sell")) {
 			
-			System.out.println(faction.getOffers().size());
-			
 			if(faction.getOffers().size() > 0) {
 				sendFMessage(sender, "&cVous devez attendre la vente de votre AP avant d'en vendre un nouveau !");
 				return;
@@ -159,6 +157,9 @@ public class Ap extends AbstractCommand {
 			}
 			
 			StandFaction current = StandPlugin.get().getStandFaction(owner);
+			
+			System.out.println("owner:: " + owner.getName() + ", offers: " + current.getOffers().size());
+			
 			APOffer offer = current.getOffer(chunk);
 			if(offer == null) {
 				System.out.println("offer null");

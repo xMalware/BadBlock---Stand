@@ -28,7 +28,8 @@ public class APOffer extends StandObject {
 	private boolean toCreate = false;
 	private boolean remove;
 
-	public APOffer(Faction owner, FactionChunk ap, int price){
+	public APOffer(Faction owner, FactionChunk ap, int price) {
+		System.out.println("Creating APOffer with owner: " + owner.getFactionId());
 		this.owner = owner;
 		this.price = price;
 		this.serializable = JSON.loadFromObject(ap);
@@ -49,15 +50,19 @@ public class APOffer extends StandObject {
 	}
 
 	public String getSQLString() {
-		System.out.println("apoffer: remove=" + remove);
+		//System.out.println("getSQLString():APOffer->owner=" + owner.getName());
+		//System.out.println("saving by sql string: [ADD?]: " + owner.getFactionId());
 		if(remove) {
 			toCreate = true;
+			//System.out.println("[REMOVE]!");
 			return "DELETE FROM sAPOffers WHERE owner=" + owner.getFactionId() + " AND ap='" + serializable + "'";
 		} else if(toCreate) {
 			toCreate = false;
+			//System.out.println("[ADD]!");
 			return "INSERT INTO sAPOffers(owner, ap, price) VALUES(" + owner.getFactionId() + ", '" + serializable + "', " + price + ")";
 		} else {
-			return "UPDATE sAPOffers SET ap='" + serializable + "', price=" + price + " WHERE owner=" + owner.getFactionId();
+			//System.out.println("[UPDATE]!");
+			return "UPDATE sAPOffers SET price=" + price + " WHERE owner=" + owner.getFactionId() + " AND ap='" + serializable + "'";
 		}
 	}
 	

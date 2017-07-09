@@ -68,11 +68,12 @@ public class StandFaction extends StandObject {
 	
 	public List<APOffer> getOffers() {
 		if(offers == null)
-			return new ArrayList<>();
+			offers = new ArrayList<>();
 		return offers;
 	}
 	
 	public void addOffer(APOffer offer) {
+		if(getOffers().contains(offer)) { System.out.println("cancelled add offer, existing"); return; }
 		allOffers.add(offer);
 		getOffers().add(offer);
 	}

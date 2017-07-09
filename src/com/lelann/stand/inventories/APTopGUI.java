@@ -16,7 +16,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import com.lelann.factions.Main;
 import com.lelann.factions.api.Faction;
 import com.lelann.factions.api.FactionChunk;
-import com.lelann.factions.api.managers.ChunksManager;
 import com.lelann.factions.database.Callback;
 import com.lelann.factions.utils.ChatUtils;
 import com.lelann.factions.utils.ItemUtils;
@@ -204,30 +203,30 @@ public class APTopGUI extends AbstractInventory {
 			Faction other = buying.getOwner();
 			FactionChunk c = buying.getAp();
 			
-			//c.setOnSale(false);
-			System.out.println("BUYING CHUNK AT " + c.toString() + ", BEFORE: ONSALE=" + c.isOnSale());
 			Main.getInstance().getChunksManager(c.getWorld()).setOnSale(c, false);
 			c.getAllowedMembers().clear();
 			c.setFactionId(fac.getFactionId());
-			System.out.println("BUYING CHUNK AT " + c.toString() + ", AFTER: ONSALE=" + c.isOnSale());
-
-			other.setChunkNumber(other.getChunkNumber() - 1);
-			other.setApChunkNumber(other.getApChunkNumber() - 1);
+			c.setLastVisited(System.currentTimeMillis());
+			
 			fac.setApChunkNumber(fac.getApChunkNumber() + 1);
-			fac.setChunkNumber(fac.getChunkNumber() + 1);
-			
+			fac.setChunkNumber(fac.getChunkNumber() + 1);			
 			fac.removeFromCapital(buying.getPrice() + (int) taxe(buying.getPrice()));
-			other.addToCapital(buying.getPrice());
-			
-			other.updateScoreboard();
 			fac.updateScoreboard();
-			other.sendMessage(PREFIX_FACTION + "&eVous avez vendu votre AP en &c" + c.toString() + "&e à &c" + fac.getName() + "&e pour &c" + (buying.getPrice()) + "$&e !");
 			fac.sendMessage(PREFIX_FACTION + "&eVous avez acheté l'AP de &c" + other.getName() + "&e en &c" + c.toString() + "&e pour &c" + (buying.getPrice() + (int) taxe(buying.getPrice())) + "$&e !");
 
+			if(!other.equals(Faction.BADBLOCK)) {
+				other.addToCapital(buying.getPrice());
+				other.setChunkNumber(other.getChunkNumber() - 1);
+				other.setApChunkNumber(other.getApChunkNumber() - 1);
+				other.updateScoreboard();
+				other.sendMessage(PREFIX_FACTION + "&eVous avez vendu votre AP en &c" + c.toString() + "&e à &c" + fac.getName() + "&e pour &c" + (buying.getPrice()) + "$&e !");
+				other.save(false);
+			}
+			
 			StandPlugin.get().getProtector().unprotect(c);
 			faction.removeOffer(buying);
 			
-			c.save(false); other.save(false); fac.save(false); faction.save();
+			c.save(false); fac.save(false); faction.save();
 		}
 		
 		regenerate();
@@ -250,7 +249,6 @@ public class APTopGUI extends AbstractInventory {
 			}
 			
 			if(getInventory().getItem(slot).getAmount() < 1 || getInventory().getItem(slot).getDurability() == 14) {
-				System.out.println("updating !");
 				totalBuy++;
 				totalMoneyBuy += offer.getPrice() + taxe(offer.getPrice());
 				indicator(slot, true);
@@ -375,7 +373,6 @@ public class APTopGUI extends AbstractInventory {
 				
 				alreadySelected.remove(toRem);
 				
-				System.out.println("updating ! removeUnit");
 				totalSell--;
 				totalMoneySell -= req.getWantedPrice();
 				indicator(slot, false);
@@ -432,8 +429,6 @@ public class APTopGUI extends AbstractInventory {
 	}
 	
 	public void updateBuyItem(boolean isOffer) {
-		System.out.println("updatebuyitem ! : " + isOffer + " -> isOffer");
-		//StandPlayer player = StandPlugin.get().getPlayer(getPlayer());
 		StandFaction faction = StandPlugin.get().getStandFaction(fac);
 		ItemStack newStack = null;
 		
@@ -544,7 +539,6 @@ public class APTopGUI extends AbstractInventory {
 					if(action == InventoryAction.PICKUP_HALF) {
 						removeUnit(false, slot);
 					} else {
-						System.out.println("Adding unit for slot " + slot + " ! Opening ?");
 						addUnit(false, slot);
 					}
 				}
@@ -563,7 +557,6 @@ public class APTopGUI extends AbstractInventory {
 			int slot = getPrintSlot(index, false);
 			item.print(APTopGUI.this, slot);
 			
-			System.out.println("registred request at slot: " + (slot+1));
 			requestsBySlots.put(slot+1, offer);
 		}
 	}
@@ -571,14 +564,25 @@ public class APTopGUI extends AbstractInventory {
 	private void printOffers() {
 		for(int index = 0; index < topOffers.size(); index++) {
 			APOffer offer = topOffers.get(index);
-			ItemStack head = ItemUtils.createHead("&7Faction: &6" + offer.getFactionName(), offer.getOwner().getLeader().getLastUsername());
+			ItemStack head = null; 
+			
+			if(offer.getOwner().equals(Faction.BADBLOCK) || offer.getOwner().getLeader() == null) {
+				head = ItemUtils.create("&7Faction: &6" + offer.getOwner().getName(), Material.DIAMOND_BLOCK);
+			} else {
+				head = ItemUtils.createHead("&7Faction: &6" + offer.getFactionName(), offer.getOwner().getLeader().getLastUsername());
+			}
+			
 			ItemStack addToCart = ItemUtils.create("&aAjouter&7 ou&c retirer", new String[] {"", "&7> &bClic gauche&7 pour ajouter une unité", "&7> &bClic droit&7 pour retirer une unité"}, Material.STAINED_GLASS_PANE, 14);
 			ItemStack concerned = offer.createItemStack();
 			
 			ItemAction headAction = new ItemAction() {
 				@Override
 				public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
-					offer.getOwner().sendInfos(p);
+					if(!offer.getOwner().equals(Faction.BADBLOCK)) {
+						offer.getOwner().sendInfos(p);
+					} else {
+						sendFMessage("&cPas d'information pour cette faction.");
+					}
 				}
 			};
 			ItemAction addAction = new ItemAction() {
@@ -624,12 +628,6 @@ public class APTopGUI extends AbstractInventory {
 			public void run() {
 				
 				found = true;
-				
-				/*if(!hasOffers && !hasRequests) {
-					goBack();
-					ChatUtils.sendMessage(p, "&cAucune offre ni demande n'ont été trouvées pour cet item :c");
-					return;
-				}*/
 				
 				if(hasOffers || hasRequests) {
 					if(back != null) {

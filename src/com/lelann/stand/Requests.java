@@ -31,7 +31,7 @@ public class Requests {
 		getDB().updateAsynchrounously(offer.getSQLString());
 	}
 	
-	public static void saveAPOffer(final APOffer offer){
+	public static void saveAPOffer(final APOffer offer) {
 		getDB().updateAsynchrounously(offer.getSQLString());
 	}
 	
@@ -240,6 +240,12 @@ public class Requests {
 
 	public static void saveAPOffers(StandFaction standFaction) {
 		for(APOffer offer : standFaction.getOffers()) {
+			if(offer == null) {
+				System.out.println("offer is null WTFFFF ??,!!,!,!,");
+				continue;
+			}
+			
+			System.out.println("saving offer " + offer.getAp().toString() + ", owner: " + offer.getOwner().getFactionId());
 			saveAPOffer(offer);
 		}
 	}
