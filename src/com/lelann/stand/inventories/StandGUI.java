@@ -13,8 +13,6 @@ import com.lelann.stand.objects.StandOffer;
 import com.lelann.stand.objects.StandPlayer;
 
 public class StandGUI extends AbstractInventory {
-
-	//TODO REFAIRE LE GUI
 	
 	private StandPlayer viewer;
 	private StandPlayer owner;

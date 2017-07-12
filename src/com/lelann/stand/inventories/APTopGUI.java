@@ -49,7 +49,7 @@ public class APTopGUI extends AbstractInventory {
 	private int totalBuy, totalSell, totalMoneyBuy, totalMoneySell = 0;
 	private final double TAXE = 0.10;
 	
-	private boolean hasOffers = true, hasRequests = true, found = false;
+	private boolean hasOffers = true, hasRequests = true;
 	private Faction fac;
 	private StandFaction faction;
 	private StandPlayer player;
@@ -244,7 +244,6 @@ public class APTopGUI extends AbstractInventory {
 			APOffer offer = offersBySlots.get(slot);
 			
 			if(offer == null) {
-				System.out.println("offer is null");
 				return;
 			}
 			
@@ -268,7 +267,6 @@ public class APTopGUI extends AbstractInventory {
 			APRequest req = requestsBySlots.get(slot);
 			
 			if(req == null) {
-				System.out.println("req is null");
 				return;
 			}
 			
@@ -334,12 +332,10 @@ public class APTopGUI extends AbstractInventory {
 			APOffer offer = offersBySlots.get(slot);
 			
 			if(offer == null) {
-				System.out.println("offer is null : removeUnit");
 				return;
 			}
 			
 			if(getInventory().getItem(slot).getAmount() > 1 || getInventory().getItem(slot).getDurability() == 13 && totalBuy > 0) {
-				System.out.println("updating ! removeUnit");
 				totalBuy--;
 				totalMoneyBuy -= offer.getPrice();
 				indicator(slot, false);
@@ -357,7 +353,6 @@ public class APTopGUI extends AbstractInventory {
 			APRequest req = requestsBySlots.get(slot);
 			
 			if(req == null) {
-				System.out.println("req is null : removeUnit");
 				return;
 			}
 			
@@ -626,8 +621,6 @@ public class APTopGUI extends AbstractInventory {
 		loadTops(new Runnable() {
 			@Override
 			public void run() {
-				
-				found = true;
 				
 				if(hasOffers || hasRequests) {
 					if(back != null) {

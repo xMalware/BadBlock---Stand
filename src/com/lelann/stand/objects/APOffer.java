@@ -27,15 +27,17 @@ public class APOffer extends StandObject {
 
 	private boolean toCreate = false;
 	private boolean remove;
+	@Getter private long canBeRemovedAt;
+	private int TIME = 24 * 60 * 60 * 1000;
 
 	public APOffer(Faction owner, FactionChunk ap, int price) {
-		System.out.println("Creating APOffer with owner: " + owner.getFactionId());
 		this.owner = owner;
 		this.price = price;
 		this.serializable = JSON.loadFromObject(ap);
 		this.ap = ap;
 		this.toCreate = true;
 		this.remove = false;
+		this.canBeRemovedAt = System.currentTimeMillis() + TIME;
 	}
 
 	public APOffer(ResultSet set){
@@ -44,6 +46,7 @@ public class APOffer extends StandObject {
 			this.price = set.getInt("price");
 			this.owner = Main.getInstance().getFactionsManager().getFaction(set.getInt("owner"));
 			this.ap = JSON.saveAsObject(serializable, FactionChunk.class);
+			this.canBeRemovedAt = set.getLong("canberemovedat");
 			this.toCreate = false;
 			this.remove = false;
 		} catch(Exception e){}
@@ -59,7 +62,7 @@ public class APOffer extends StandObject {
 		} else if(toCreate) {
 			toCreate = false;
 			//System.out.println("[ADD]!");
-			return "INSERT INTO sAPOffers(owner, ap, price) VALUES(" + owner.getFactionId() + ", '" + serializable + "', " + price + ")";
+			return "INSERT INTO sAPOffers(owner, ap, price, canberemovedat) VALUES(" + owner.getFactionId() + ", '" + serializable + "', " + price + ", " + canBeRemovedAt + ")";
 		} else {
 			//System.out.println("[UPDATE]!");
 			return "UPDATE sAPOffers SET price=" + price + " WHERE owner=" + owner.getFactionId() + " AND ap='" + serializable + "'";
@@ -81,6 +84,10 @@ public class APOffer extends StandObject {
 
 	public String getName() {
 		return "&7Mise en vente de l'AP (&6" + ap.toString() + "&7)";
+	}
+	
+	public boolean canRemove() {
+		return System.currentTimeMillis() > canBeRemovedAt;
 	}
 
 	public boolean isChunk(FactionChunk ap) {

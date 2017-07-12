@@ -169,7 +169,6 @@ public class TopGUI extends AbstractInventory {
 			selling.remove(amount);
 			
 			if(selling.getWantedAmount() <= 0) {
-				System.out.println("removing request !");
 				owner.removeRequest(selling);
 			}
 			
@@ -423,7 +422,7 @@ public class TopGUI extends AbstractInventory {
 			public void call(Throwable t, List<StandOffer> result) {
 				if(t != null || result == null || result.size() == 0) { 
 					hasOffers = false; 
-					Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(StandPlugin.get(), callBack, 1L); 
+					second(callBack);
 					return;
 				}
 				
@@ -438,9 +437,10 @@ public class TopGUI extends AbstractInventory {
 					if(owner != null)
 						name = owner.getLastUsername();
 					else {
-						if(printIndex > 0)
+						/*if(printIndex > 0)
 						printIndex--;
-						continue;
+						continue;*/
+						owner = Main.getInstance().getPlayersManager().addPlayer(offer.getOwner());
 					}
 					
 					ItemStack head = ItemUtils.createHead("&7Stand: " + StandPlugin.get().getPlayer(offer.getOwner()).getStandName(), name);
@@ -462,9 +462,6 @@ public class TopGUI extends AbstractInventory {
 						
 						@Override
 						public void run(Player p, ItemStack clicked, int slot, InventoryAction action) {
-							
-							System.out.println(action);
-							
 							if(action == InventoryAction.CLONE_STACK) {
 								addStackToCart(true, slot);
 								return;
@@ -508,7 +505,7 @@ public class TopGUI extends AbstractInventory {
 			public void call(Throwable t, List<StandRequest> requests) {
 				if(t != null || requests == null || requests.size() == 0) {
 					hasRequests = false;
-					Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(StandPlugin.get(), callBack, 1L);
+					run(callBack);
 					return;
 				}
 				
@@ -521,7 +518,7 @@ public class TopGUI extends AbstractInventory {
 						printIndex++;
 					}
 				}
-				Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(StandPlugin.get(), callBack, 1L);
+				run(callBack);
 				
 			}
 		});
@@ -535,7 +532,7 @@ public class TopGUI extends AbstractInventory {
 		if(owner != null)
 			name = owner.getLastUsername();
 		else {
-			return false;
+			owner = Main.getInstance().getPlayersManager().addPlayer(request.getOwner());
 		}
 		
 		ItemStack head = ItemUtils.createHead("&7Stand: " + StandPlugin.get().getPlayer(request.getOwner()).getStandName(), name);
@@ -612,11 +609,6 @@ public class TopGUI extends AbstractInventory {
 				
 				found = true;
 				
-				if(totalPrinted <= 0) {
-					sendMessage("&cUne erreur est survenue : des offres ont été trouvées mais n'ont pas pu être affichées.");
-					return;
-				}
-				
 				if(!hasOffers && !hasRequests) {
 					goBack();
 					sendMessage("&cAucune offre ni demande n'ont été trouvées pour cet item :c");
@@ -624,10 +616,23 @@ public class TopGUI extends AbstractInventory {
 				}
 				
 				if(hasOffers || hasRequests) {
-					if(back != null) {
-						back.displayGui(TopGUI.this);
+					if(totalPrinted > 0) {
+						if(back != null) {
+							back.displayGui(TopGUI.this);
+						} else {
+							show();
+						}
 					} else {
-						show();
+						sendMessage("&cUne erreur est survenue : des offres ont été trouvées mais n'ont pas pu être affichées.");
+						TopGUI.this.run(new Runnable() {
+							
+							@Override
+							public void run() {
+								goBack();
+								
+							}
+						}, 5L);
+						return;
 					}
 				} else { 
 					goBack();

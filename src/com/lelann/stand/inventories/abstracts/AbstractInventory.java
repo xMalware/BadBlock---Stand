@@ -319,6 +319,10 @@ public abstract class AbstractInventory extends StandObject {
 		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(getPlugin(), cb, 1L);
 	}
 	
+	public void run(Runnable cb, long delay) {
+		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(getPlugin(), cb, delay);
+	}
+	
 	public void sendMessage(String msg) {
 		sendMessage(getPlayer(), msg);
 	}

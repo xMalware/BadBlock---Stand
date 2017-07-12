@@ -28,12 +28,6 @@ public class Ap extends AbstractCommand {
 			return;
 		}
 		
-		//
-		// /stand ap list -> gui
-		// /stand ap sell x,z prix
-		// /stand ap buy prix
-		//
-		
 		StandPlayer player = getPlayer(sender);
 		FactionPlayer p = Main.getInstance().getPlayersManager().getPlayer(sender);
 		Faction f = p.getFaction();
@@ -101,8 +95,6 @@ public class Ap extends AbstractCommand {
 			
 		} else if(args[0].equalsIgnoreCase("buy")) {
 			
-			
-			
 			if(args.length >= 2 && args[1].equalsIgnoreCase("list")) {
 				faction.sendList(sender);
 				return;
@@ -152,19 +144,16 @@ public class Ap extends AbstractCommand {
 			Faction owner = chunk.getOwner();
 			
 			if(owner == null) {
-				System.out.println("owner null");
 				return;
 			}
 			
 			StandFaction current = StandPlugin.get().getStandFaction(owner);
 			
-			System.out.println("owner:: " + owner.getName() + ", offers: " + current.getOffers().size());
-			
 			APOffer offer = current.getOffer(chunk);
 			if(offer == null) {
-				System.out.println("offer null");
 				return;
 			}
+			
 			String title = "&7AP en vente !";
 			String subtitle = "&7Faction: " + MoveListener.color(f, owner) + owner.getName() + " &7Prix: &b" + offer.getPrice() + "$";
 			

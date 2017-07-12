@@ -52,6 +52,11 @@ public class APProtector extends FactionObject implements Listener {
 	}
 	
 	public boolean doProtect(Chunk c) {
+		for(Chunk ch : protecteds.keySet()) {
+			if(ch.getX() == c.getX() && ch.getZ() == c.getZ()) {
+				return true;
+			}
+		}
 		return protecteds.containsKey(c);
 	}
 	
@@ -83,6 +88,7 @@ public class APProtector extends FactionObject implements Listener {
 				break;
 			}
 		}
+		//System.out.println("uhoh ! Explosion in " + c.getX() + ";" + c.getZ() + "... Protect it ? => " + affected);
 		e.setCancelled(affected);
 		/*List<Block> newList = new ArrayList<>();
 		for(Block b : e.blockList()) {

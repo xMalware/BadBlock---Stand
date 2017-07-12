@@ -53,7 +53,6 @@ public class APRequest extends StandObject {
 
 	public String getSQLString(){
 		if(wantedAmount <= 0) {
-			System.out.println("DELETING REQUEST !");
 			toCreate = true;
 			return "DELETE FROM sAPRequests WHERE owner=" + owner.getFactionId() + " AND initialamount=" + initialAmount;
 		} else if(toCreate){

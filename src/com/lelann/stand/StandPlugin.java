@@ -48,9 +48,9 @@ import lombok.Getter;
 
 public class StandPlugin extends JavaPlugin {
 	
-	//public static final long MS_OFF = 5 * 24 * 3600 * 1000;
+	public static final long MS_OFF = 5 * 24 * 3600 * 1000;
 	//public static final long MS_OFF = 5 * 60 * 1000;
-	public static final long MS_OFF = 600000;
+	//public static final long MS_OFF = 2 * 60 * 1000;
 	
 	private static StandPlugin instance = null;
 	public static StandPlugin get() {
@@ -194,7 +194,6 @@ public class StandPlugin extends JavaPlugin {
 		System.out.println(StandPlayer.allRequests.size() + " requests loaded !");
 		
 		for(Faction f : Main.getInstance().getFactionsManager().getLoadedFactions().values()) {
-			if(f.getFactionId() < 0) System.out.println("loaded fac " + f.getName());
 			addStandFaction(new StandFaction(f));
 		}
 		
@@ -209,8 +208,6 @@ public class StandPlugin extends JavaPlugin {
 		int s = 0;
 		for(ChunksManager manager : Main.getInstance().getChunksManagers()) {
 			for(FactionChunk chunk : manager.getChunks().values()) {
-				
-				System.out.println("CHUNK INFO: " + chunk.toString());
 				if(chunk.getOwner() == null) {
 					chunk.setFactionId(Faction.WILDERNESS.getFactionId());
 					Main.getInstance().getChunksManager(chunk.getWorld()).setOnSale(chunk, false);
@@ -248,30 +245,12 @@ public class StandPlugin extends JavaPlugin {
 				
 				//Autosale AP
 				if(chunk.getOwner().getFactionId() != Faction.WILDERNESS.getFactionId() && chunk.isAp() && chunk.getLastVisited() + MS_OFF < current.getTime()) {
-					System.out.println("Found AP which is abandoned ! => " + chunk.toString());
 					if(!chunk.isOnSale()) {
-						//manager.claim(Faction.BADBLOCK, chunk.getChunk());
-						chunk.getOwner().setApChunkNumber(chunk.getOwner().getApChunkNumber()-1);
-						chunk.setFactionId(Faction.BADBLOCK.getFactionId());
-						//APOffer offer = new APOffer(Faction.BADBLOCK, chunk, 10000);
-						//StandFaction.allOffers.add(offer);
-						sellAp(Faction.BADBLOCK, chunk, 10000, false);
-						
+						System.out.println("Found AP which is abandoned ! => " + chunk.toString());
+						manager.claim(Faction.BADBLOCK, chunk.getChunk());
 						System.out.println("selling ap " + chunk.toString());
-						//StandFaction faction = getStandFaction(f);
-						//Main.getInstance().getChunksManager(chunk.getWorld()).setOnSale(chunk, true);
-						//Main.getInstance().getChunksManager(chunk.getWorld()).saveChunk(chunk, true);
-						
-						//protector.protect(chunk);
-						
-						//APOffer offer = new APOffer(Faction.BADBLOCK, chunk, 10000);
-						//Faction.BADBLOCK.save(false);
-						
 					} else {
-						//StandFaction sf = getStandFaction(chunk.getOwner());
-						//APOffer apo = sf.getOffer(chunk);
 						if(apo == null) {
-							System.out.println(".. but we remove it because no offer !");
 							
 							Main.getInstance().getChunksManager(chunk.getWorld()).setOnSale(chunk, false);
 							Main.getInstance().getChunksManager(chunk.getWorld()).saveChunk(chunk, true);
@@ -283,14 +262,12 @@ public class StandPlugin extends JavaPlugin {
 							sf.save();
 							sf.getFaction().save(false);
 							
-						} else {
-							System.out.println(".. but it was already on sale !");
 						}
 					}
 				}
 				
 			}
-			System.out.println("AP CHECKER STARTER FOR MANAGER IN " + manager.getWorld());
+			System.out.println("Starting APChecker in world " + manager.getWorld());
 			startApChecker(manager);
 		}
 		
@@ -317,12 +294,12 @@ public class StandPlugin extends JavaPlugin {
 				long current = System.currentTimeMillis();
 				for(FactionChunk ap : manager.getAPs()) {
 					if(!ap.isOnSale() && ap.getOwner().getFactionId() != Faction.WILDERNESS.getFactionId()) {
+						//System.out.println("Checking:: " + (ap.getLastVisited() + MS_OFF) + " < " + current + " ? ==> " + (current - (ap.getLastVisited() + MS_OFF) < 0 ? " NO " : " YES "));
 						if(ap.getLastVisited() + MS_OFF < current) {
-							ap.getOwner().sendMessage("&eOh non ! Vous n'êtes pas allés sur votre AP en &c" + ap.toString() + "&e durant les " + (MS_OFF / 24 / 3600) + " jours ! Il a donc été mis en vente par &cBadblock&e pour &c10000$&e !");
-							ap.getOwner().setApChunkNumber(ap.getOwner().getApChunkNumber()-1);
+							ap.getOwner().sendMessage("&eOh non ! Vous n'êtes pas allés sur votre AP en &c" + ap.toString() + "&e durant les " + (MS_OFF / 1000 / 3600 / 24) + " derniers jours ! Il a donc été mis en vente par &cBadblock&e pour &c10000$&e !");
+							//ap.getOwner().setApChunkNumber(ap.getOwner().getApChunkNumber()-1);
 							manager.claim(Faction.BADBLOCK, ap.getChunk());
-							sellAp(Faction.BADBLOCK, ap, 10000, false);
-							System.out.println("AUTOSOLD AP " + ap.toString());
+							sellAp(Faction.BADBLOCK, ap, 10000);
 						}
 					}
 				}
@@ -360,19 +337,6 @@ public class StandPlugin extends JavaPlugin {
 	}
 
 	public void sellAp(Faction f, FactionChunk chunk, int price) {
-		StandFaction faction = getStandFaction(f);
-		Main.getInstance().getChunksManager(chunk.getWorld()).setOnSale(chunk, true);
-		Main.getInstance().getChunksManager(chunk.getWorld()).saveChunk(chunk, true);
-		
-		protector.protect(chunk);
-		
-		APOffer offer = new APOffer(f, chunk, price);
-		faction.addOffer(offer);
-		faction.save();
-		faction.getFaction().save(false);
-	}
-	
-	public void sellAp(Faction f, FactionChunk chunk, int price, boolean possession) {
 		StandFaction faction = getStandFaction(f);
 		Main.getInstance().getChunksManager(chunk.getWorld()).setOnSale(chunk, true);
 		Main.getInstance().getChunksManager(chunk.getWorld()).saveChunk(chunk, true);

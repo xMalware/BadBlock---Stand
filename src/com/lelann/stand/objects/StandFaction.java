@@ -54,7 +54,6 @@ public class StandFaction extends StandObject {
 	}
 	
 	public void deleteRequest(APRequest request) {
-		System.out.println("DeleteRequest !");
 		request.setWantedAmount(0);
 		getRequests().remove(request);
 		allRequests.remove(request);
@@ -73,7 +72,7 @@ public class StandFaction extends StandObject {
 	}
 	
 	public void addOffer(APOffer offer) {
-		if(getOffers().contains(offer)) { System.out.println("cancelled add offer, existing"); return; }
+		if(getOffers().contains(offer)) { return; }
 		allOffers.add(offer);
 		getOffers().add(offer);
 	}

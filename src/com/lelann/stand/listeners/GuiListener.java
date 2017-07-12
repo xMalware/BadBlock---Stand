@@ -22,7 +22,6 @@ public class GuiListener extends StandObject implements Listener {
 	public void guiClick(InventoryClickEvent e) {
 		AbstractInventory gui = InventoryManager.getClickedGui(e);
 		if(gui == null) {
-			System.out.println("gui is null");
 			return;
 		}
 		

@@ -1,8 +1,11 @@
 package com.lelann.stand.inventories;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.bukkit.Material;
@@ -131,7 +134,6 @@ public class APGui extends AbstractInventory {
 	private void sellAp(int slot) {
 		FactionChunk current = APsBySlot.get(slot);
 		if(current == null) {
-			System.out.println("CHUNK IS NULL AT SLOT " + slot);
 			return;
 		}
 		if(current.isOnSale()) {
@@ -180,6 +182,13 @@ public class APGui extends AbstractInventory {
 		if(current == null) return;
 		if(!current.isOnSale()) return;
 		APOffer toRevok = faction.getOffer(current);
+		
+		if(!toRevok.canRemove()) {
+			DateFormat format = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.FRENCH);
+			sendFMessage("&cVous ne pouvez pas encore supprimer cette offre ! Vous devez attendre jusqu'au " + format.format(new Date(toRevok.getCanBeRemovedAt())) + " avant de pouvoir la retirer !");
+			return;
+		}
+		
 		getPlayer().closeInventory();
 		StandPlugin.get().unsellAp(faction.getFaction(), toRevok);
 		faction.getFaction().sendMessage("&c" + getPlayer().getName() + "&e a annulé la mise en vente de l'AP en &c" + current.toString() + "&e !");

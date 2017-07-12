@@ -73,7 +73,10 @@ public class Requests {
 	
 	public static void getTop(ItemStack item, int limit, boolean cheap, Callback<List<StandOffer>> done) {
 		List<StandOffer> offers = offers(item);
-		if(offers == null) done.call(new Throwable("Pas d'offre pour cet item."), null);
+		if(offers == null) {
+			System.out.println("could not find any offer for item " + item.getType());
+			done.call(new Throwable("Pas d'offre pour cet item."), null);
+		}
 		List<StandOffer> base = offers(item);
 		base.sort(Comparator.comparing(StandOffer::getPrice));
 		if(!cheap) {
@@ -89,7 +92,7 @@ public class Requests {
 		for(StandOffer offer : StandPlayer.allOffers) {
 			if(offer.getType() == item.getType() && offer.getData() == item.getData().getData()) {
 				FactionPlayer owner = Main.getInstance().getPlayersManager().getPlayer(offer.getOwner());
-				if(owner == null) continue;
+				if(owner == null) owner = Main.getInstance().getPlayersManager().addPlayer(offer.getOwner());
 				if(offer.getAmount() <= 0) continue;
 				base.add(offer);
 			}
@@ -245,7 +248,7 @@ public class Requests {
 				continue;
 			}
 			
-			System.out.println("saving offer " + offer.getAp().toString() + ", owner: " + offer.getOwner().getFactionId());
+			//System.out.println("saving offer " + offer.getAp().toString() + ", owner: " + offer.getOwner().getFactionId());
 			saveAPOffer(offer);
 		}
 	}

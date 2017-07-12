@@ -15,11 +15,9 @@ public class MenuItem {
 		for(int height = 0; height < items.length; height++) {
 			for(int index = 0; index < items[height].length; index++) {
 				int currentSlot = startSlot + index + (height*8);
-				//gui.getInventory().setItem(currentSlot, items[height][index]);
 				ClickableItem current = items[height][index];
 				current.setSlot(currentSlot);
 				gui.addClickable(currentSlot, current);
-				System.out.println("Printing item: " + startSlot + ", item: " + current.getItem().getType());
 			}
 		}
 	}
