@@ -293,10 +293,11 @@ public class StandPlugin extends JavaPlugin {
 			public void run() {
 				long current = System.currentTimeMillis();
 				for(FactionChunk ap : manager.getAPs()) {
-					if(!ap.isOnSale() && ap.getOwner().getFactionId() != Faction.WILDERNESS.getFactionId()) {
+					if(ap != null && !ap.isOnSale() && ap.getOwner() != null && ap.getOwner().getFactionId() != Faction.WILDERNESS.getFactionId()) {
 						//System.out.println("Checking:: " + (ap.getLastVisited() + MS_OFF) + " < " + current + " ? ==> " + (current - (ap.getLastVisited() + MS_OFF) < 0 ? " NO " : " YES "));
-						if(ap.getLastVisited() + MS_OFF < current) {
+						if(ap.getOwner() != Faction.BADBLOCK && ap.getLastVisited() + MS_OFF < current) {
 							ap.getOwner().sendMessage("&eOh non ! Vous n'êtes pas allés sur votre AP en &c" + ap.toString() + "&e durant les " + (MS_OFF / 1000 / 3600 / 24) + " derniers jours ! Il a donc été mis en vente par &cBadblock&e pour &c10000$&e !");
+							System.out.println("AP WAS INACTIVE : FACTION=" + ap.getOwner().getName() + ", LASTVISITED=" + ap.getLastVisited() + ", CURRENT_TIME=" + System.currentTimeMillis() + ", CHUNK=" + ap.toString());
 							//ap.getOwner().setApChunkNumber(ap.getOwner().getApChunkNumber()-1);
 							manager.claim(Faction.BADBLOCK, ap.getChunk());
 							sellAp(Faction.BADBLOCK, ap, 10000);

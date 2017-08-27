@@ -65,7 +65,7 @@ public class Add extends AbstractCommand {
 			int price = 0;
 			try  {
 				price = Integer.parseInt(args[0]);
-				if(price < 0){
+				if(price <= 0){
 					throw new RuntimeException();
 				}
 			} catch(Exception e){
@@ -75,7 +75,7 @@ public class Add extends AbstractCommand {
 			int count = 0;
 			for(int i=0;i<inv.getSize();i++){
 				ItemStack is = inv.getItem(i);
-				if(is != null && is.getType() == type && is.getData().getData() == data){
+				if(is != null && is.getType() == type && is.getData().getData() == data && is.isSimilar(item)){
 					count += is.getAmount();
 					inv.setItem(i, null);
 				}
@@ -86,6 +86,7 @@ public class Add extends AbstractCommand {
 				offer = new StandOffer(player.getUniqueId(), item, price);
 				offer.setAmount(0);
 				player.addOffer(offer);
+				//System.out.println("added item: data(" + item.getData().getData() + "), dura(" + item.getDurability() + "), type(" + item.getType() + ")");
 			}
 
 			offer.add(count);

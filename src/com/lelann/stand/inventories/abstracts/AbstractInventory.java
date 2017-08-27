@@ -331,6 +331,8 @@ public abstract class AbstractInventory extends StandObject {
 	
 	public abstract void onClose(Player p);
 	
+	public void regenerate() {};
+	
 	public abstract class ItemAction {
 		
 		public abstract void run(Player p, ItemStack clicked, int slot, InventoryAction action);

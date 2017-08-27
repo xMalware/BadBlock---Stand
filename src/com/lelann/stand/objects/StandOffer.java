@@ -16,12 +16,11 @@ import fr.devhill.socketinventory.json.elements.JObject;
 import lombok.Getter;
 import lombok.Setter;
 
-@SuppressWarnings("deprecation")
 public class StandOffer extends StandObject {
 	@Getter@Setter private int price;
 	@Getter@Setter private int amount;
 	@Getter@Setter private Material type;
-	@Getter@Setter private byte data;
+	@Getter@Setter private short data;
 	@Getter@Setter JObject serializable;
 	@Getter@Setter UUID owner;
 
@@ -32,7 +31,8 @@ public class StandOffer extends StandObject {
 		this.price = price;
 		this.amount = item.getAmount();
 		this.type = item.getType();
-		this.data = item.getData().getData();
+		//this.data = item.getData().getData();
+		this.data = item.getDurability();
 		this.serializable = JSON.loadFromObject(item);
 		this.toCreate = true;
 	}
@@ -40,7 +40,7 @@ public class StandOffer extends StandObject {
 	public StandOffer(ResultSet set){
 		try {
 			this.type = Material.matchMaterial(set.getString("type"));
-			this.data = (byte) set.getInt("data");
+			this.data = (short) set.getInt("data");
 			this.serializable = JSON.loadFromString(set.getString("itemstack"));
 			this.amount = set.getInt("amount");
 			this.price = set.getInt("price");

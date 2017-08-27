@@ -68,11 +68,47 @@ public class StandGUI extends AbstractInventory {
 		
 		StandOffer offer = owner.getOffers().get(slot);
 		ItemStack toGive = offer.createItemStack(offer.getAmount());
+		
+		ItemStack[] toGives = null;
+		
+		if(toGive.getAmount() > toGive.getMaxStackSize()) {
+			toGives = new ItemStack[toGive.getAmount() / toGive.getMaxStackSize()];
+			int max = toGive.getMaxStackSize();
+			for(int i = 0; i < toGive.getAmount() / max; i++) {
+				toGives[i] = offer.createItemStack(max);
+			}
+		}
+		
+		int maxStack = toGive.getMaxStackSize();
+		int neededPlace = (toGive.getAmount() / maxStack) + (toGive.getAmount() % maxStack == 0 ? 0 : 1);
+			
+		int findedPlace = 0;
+		
+		for(int s = 0; s < getPlayer().getInventory().getSize(); s++) {
+			if(getPlayer().getInventory().getItem(s) == null) {
+				findedPlace++;
+			}
+		}
+		
+		if(findedPlace < neededPlace) {
+			sendNMessage(getPlayer(), "&cIl n'y a pas assez de place dans votre inventaire pour retirer l'offre. Cependant, une partie des items vous ont été donnés.");
+			if(toGives != null) {
+				for(int i = 0; i < findedPlace; i++) {
+					viewer.getPlayer().getInventory().addItem(toGives[i]);
+				}
+			} else {
+				viewer.getPlayer().getInventory().addItem(toGive);
+			}
+			offer.remove(findedPlace * toGive.getMaxStackSize());
+			return;
+		}
+		
 		owner.removeOffer(offer);
 		
 		remove(slot);
-		
-		viewer.getPlayer().getInventory().addItem(toGive);
+		if(toGives != null)
+			viewer.getPlayer().getInventory().addItem(toGives);
+		else viewer.getPlayer().getInventory().addItem(toGive);
 		viewer.sendMessage("&aL'offre a été supprimée !");
 	}
 	
@@ -95,7 +131,8 @@ public class StandGUI extends AbstractInventory {
 			return;
 		}
 		StandOffer offer = owner.getOffers().get(slot);
-		displayGui(new BuyGUI(offer, getPlayer()));
+		if(offer != null)
+			displayGui(new BuyGUI(offer, getPlayer()));
 	}
 	
 	@Override
