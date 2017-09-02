@@ -48,9 +48,9 @@ import lombok.Getter;
 
 public class StandPlugin extends JavaPlugin {
 	
-	//public static final long MS_OFF = 7 * 24 * 3600 * 1000;
+	public static final long MS_OFF = 7 * 24 * 3600 * 1000;
 	//public static final long MS_OFF = 5 * 60 * 1000;
-	public static final long MS_OFF = 2 * 60 * 1000;
+	//public static final long MS_OFF = 2 * 60 * 1000;
 	
 	private static StandPlugin instance = null;
 	public static StandPlugin get() {
