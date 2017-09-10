@@ -24,9 +24,12 @@ public class ApPNJManager extends StandObject {
 		this.pnj = pnj;
 		final Villager entity = (Villager) pnj.createEntity();
 		
+		System.out.println("AP ENTITY UUID: " + entity.getUniqueId());
+		
 		for(Entity e : entity.getNearbyEntities(1.0f, 1.0f, 1.0f)){
-			if(entity.getCustomName().equals(e.getCustomName()))
+			if(entity.getCustomName().equals(e.getCustomName())) {
 				e.remove();
+			}
 		}
 		
 		new FRunnable(40L){
@@ -49,7 +52,8 @@ public class ApPNJManager extends StandObject {
 	}
 
 	public boolean isPnj(Entity entity) {
-		return pnj != null && pnj.getEntity().getUniqueId().equals(entity.getUniqueId());
+		System.out.println("IS ENTITY AP PNJ WITH UUID " + entity.getUniqueId() + " ?");
+		return pnj != null && (pnj.getEntity().getUniqueId().equals(entity.getUniqueId()) || entity.getCustomName().equals(pnj.getName()));
 	}
 	
 	public ApPNJ getApPNJ() {

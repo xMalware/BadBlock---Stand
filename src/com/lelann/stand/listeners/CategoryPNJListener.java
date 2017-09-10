@@ -4,7 +4,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 
@@ -40,6 +42,17 @@ public class CategoryPNJListener extends StandObject implements Listener {
 	}
 	
 	@EventHandler
+	public void onCreatureSpawn(CreatureSpawnEvent e) {
+		if(e.getEntityType() == EntityType.VILLAGER) {
+			if(e.isCancelled()) {
+				System.out.println("Spawned villager ! => cancelled :c");
+			} else {
+				System.out.println("Spawned villager ! => allowed !");
+			}
+		}
+	}
+	
+	@EventHandler
 	public void onDamage(EntityDamageEvent e){
 		if(e.getEntity().getType() == EntityType.VILLAGER && protect(e.getEntity())){
 			e.setCancelled(true);
@@ -50,7 +63,10 @@ public class CategoryPNJListener extends StandObject implements Listener {
 	public void onLoadChunk(ChunkLoadEvent e){
 		for(Entity entity : e.getChunk().getEntities()){
 			if(protect(entity) && !StandPlugin.get().getManager().getPnjs().containsKey(entity.getUniqueId())){
-				entity.remove();
+				if(entity.getType() != EntityType.VILLAGER) {
+					entity.remove();
+					System.out.println("wanted to remove entity : " + entity.getName());
+				}
 			}
 		}
 	}

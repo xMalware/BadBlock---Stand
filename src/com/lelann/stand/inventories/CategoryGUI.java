@@ -75,7 +75,6 @@ public class CategoryGUI extends AbstractInventory {
 		resetBottomBar(true, true);
 		
 		p.closeInventory();
-		StandPlugin.get().getManager().reload();
 	}
 	
 	public ItemStack[] getContents() {

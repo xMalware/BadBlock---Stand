@@ -3,7 +3,10 @@ package com.lelann.stand.commands;
 import java.util.Arrays;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
 
 import com.lelann.factions.utils.ChatUtils;
@@ -26,6 +29,7 @@ public class Pnj extends AbstractCommand {
 				"&c&l>&7 /stand pnj setname &bidentifier name",
 				"&c&l>&7 /stand pnj settitle &bidentifier title",
 				"&c&l>&7 /stand pnj del &bidentifier",
+				"&c&l>&7 /stand pnj clear",
 				"&c&l>&7 /stand pnj list"
 				}, 
 		new String[] {
@@ -35,6 +39,7 @@ public class Pnj extends AbstractCommand {
 				"&7Définit le nouveau nom du pnj &bidentifier&7 pour &bname",
 				"&7Définit le titre du menu du pnj &bidentifier&7 pour &btitle",
 				"&7Supprime le pnj &bidentifier",
+				"&7Supprime les pnjs en trop",
 				"&7Liste les pnjs existants"
 				}, 
 		new String[] {
@@ -44,6 +49,7 @@ public class Pnj extends AbstractCommand {
 				"/stand pnj setname ",
 				"/stand pnj settitle ",
 				"/stand pnj del ",
+				"/stand pnj clear",
 				"/stand pnj list"
 				}, 
 		null);
@@ -126,7 +132,6 @@ public class Pnj extends AbstractCommand {
 			}
 			
 			StandPlugin.get().getManager().add(new CategoryPNJ(identifier, "Mon beau pnj", "Titre de l'inventaire", player.getLocation(), Arrays.asList(new ItemStack[9*5]), 1));
-			StandPlugin.get().getManager().reload();
 			StandPlugin.get().getManager().savePnjs();
 			
 		} else if(args[0].equalsIgnoreCase("settitle")){
@@ -165,7 +170,6 @@ public class Pnj extends AbstractCommand {
 				
 				pnj.setGuiTitle(newName);
 				
-				StandPlugin.get().getManager().reload();
 				StandPlugin.get().getManager().savePnjs();
 				
 				sPlayer.sendMessage("&aLe titre de l'inventaire a été modifié !");
@@ -257,6 +261,31 @@ public class Pnj extends AbstractCommand {
 			
 		} else if(args[0].equalsIgnoreCase("list")) {
 			StandPlugin.get().getManager().sendList(player);
+		} else if(args[0].equalsIgnoreCase("clear")) {
+			for(CategoryPNJ pnj : StandPlugin.get().getManager().getPnjs().values()) {
+				int i = pnj.getLocation().getWorld().getEntitiesByClass(Villager.class).size();
+				for(Entity e : pnj.getLocation().getWorld().getEntitiesByClass(Villager.class)) {
+					if(e.getCustomName() != null && e.getCustomName().equals(pnj.getName()))
+						if(i > 1) {
+							e.remove();
+							i--;
+						}
+					
+					if(i > 50) {
+						e.remove();
+					}
+				}
+			}
+		}  else if(args[0].equalsIgnoreCase("cleardefault")) {
+			for(Entity e : player.getWorld().getNearbyEntities(player.getLocation(), 50, 50, 50)) {
+				if(e.getType() == EntityType.VILLAGER) {
+					if(e.getCustomName() == null) {
+						e.remove();
+					}
+				}
+			}
+		}  else if(args[0].equalsIgnoreCase("load")) {
+			StandPlugin.get().getManager().load();
 		}
 	}
 }

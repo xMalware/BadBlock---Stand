@@ -8,8 +8,11 @@ import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
+import org.bukkit.entity.Villager.Profession;
+import org.bukkit.metadata.FixedMetadataValue;
 
 import com.lelann.factions.runnables.FRunnable;
 import com.lelann.factions.utils.ChatUtils;
@@ -31,37 +34,61 @@ public class CategoryPNJManager extends StandObject {
 	@Getter
 	private Map<String, CategoryPNJ> identifiers = new HashMap<>();
 	
+	private List<CategoryPNJ> temp;
+	
 	public CategoryPNJManager(List<CategoryPNJ> pnjs) {
+		temp = pnjs;
 		for(final CategoryPNJ pnj : pnjs) {
 			add(pnj);
 		}
 	}
 	
-	public void reload() {
-		
+	public void load() {
+		for(final CategoryPNJ pnj : temp) {
+			add(pnj);
+		}
 	}
 	
 	public void add(CategoryPNJ pnj) {
+		
+		if(!pnj.getLocation().getChunk().isLoaded())
+			pnj.getLocation().getChunk().load();
+		
 		final Villager entity = (Villager) pnj.createEntity();
 		pnjs.put(entity.getUniqueId(), pnj);
 		identifiers.put(pnj.getIdentifier(), pnj);
 		
 		for(Entity e : entity.getNearbyEntities(1.0f, 1.0f, 1.0f)){
-			if(entity.getCustomName().equals(e.getCustomName()))
+			if(entity.getCustomName().equals(e.getCustomName()) && !entity.getLocation().equals(e.getLocation()))
 				e.remove();
 		}
 		
-		new FRunnable(40L){
+		System.out.println("ADDING PNJ:: " + pnj.getName() + " :: is dead?: " + (entity.isDead() || entity == null));
+		
+		new FRunnable(40L) {
+			
 			@Override
 			public void run(){
 				if(entity == null || entity.isDead()) {
+					/*System.out.println("entity dead");
+					
+					Villager v = (Villager) pnj.getLocation().getWorld().spawnEntity(pnj.getLocation(), EntityType.VILLAGER);
+					Location loc = pnj.getLocation().clone();
+					loc.setYaw(v.getLocation().getYaw());
+					loc.setPitch(v.getLocation().getPitch());
+					
+					v.teleport(loc);*/
+					
 					cancel(); return;
 				}
+				
 				Location loc = pnj.getLocation().clone();
 				loc.setYaw(entity.getLocation().getYaw());
 				loc.setPitch(entity.getLocation().getPitch());
 				
 				entity.teleport(loc);
+				
+				//System.out.println("entity dead ? => " +(e == null || e.isDead()));
 			}
 		}.start();
 	}

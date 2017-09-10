@@ -60,11 +60,18 @@ public class CategoryPNJ extends StandObject {
 		
 		v.setMetadata("standPNJ", new FixedMetadataValue(StandPlugin.get(), ""));
 		
+		
 		try {
 			AttributeInstance attributes = ((EntityInsentient)((CraftLivingEntity) v).getHandle()).getAttributeInstance(GenericAttributes.MOVEMENT_SPEED);
 			attributes.setValue(0.0f);
 		} catch (IllegalArgumentException | SecurityException e) {
 			e.printStackTrace();
+		}
+		
+//		System.out.println("is entity dead ?? => " + v.isDead() + " is null " + (v == null) + " health: " + v.getHealth() + ", " + v.getUniqueId());
+		
+		if(v.isDead()) { //WTFFFF ??!!?
+			//jeee ssaiiiss ppaass
 		}
 		
 		this.entity = v;
