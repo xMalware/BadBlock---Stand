@@ -1,6 +1,7 @@
 package com.lelann.stand.listeners;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -22,6 +23,21 @@ public class GuiListener extends StandObject implements Listener {
 	public void guiClick(InventoryClickEvent e) {
 		AbstractInventory gui = InventoryManager.getClickedGui(e);
 		if(gui == null) {
+			
+			for(AbstractInventory g : InventoryManager.guis) {
+				if(g.isSimilar(e.getWhoClicked().getOpenInventory().getTopInventory()) && g.getPlayer().getName().equals(e.getWhoClicked().getName())) {
+					gui = g;
+				}
+			}
+			
+			if(gui == null) return;
+			else {
+				if(e.isShiftClick()) {
+					e.setCancelled(true);
+					e.setResult(Result.DENY);
+				}
+			}
+			
 			return;
 		}
 		
