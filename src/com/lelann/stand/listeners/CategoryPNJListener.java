@@ -9,7 +9,10 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.ChunkUnloadEvent;
 
+import com.lelann.factions.Main;
+import com.lelann.factions.api.FactionChunk;
 import com.lelann.stand.StandPlugin;
 import com.lelann.stand.abstracts.StandObject;
 import com.lelann.stand.inventories.CategoryGUI;
@@ -68,6 +71,15 @@ public class CategoryPNJListener extends StandObject implements Listener {
 					System.out.println("wanted to remove entity : " + entity.getName());
 				}
 			}
+		}
+	}
+	
+	@EventHandler
+	public void unload(ChunkUnloadEvent e) {
+		FactionChunk fc = Main.getInstance().getChunksManager(e.getChunk().getWorld()).getFactionChunk(e.getChunk());
+		if(fc != null && (fc.getOwner().isSafezone() || fc.getOwner().isWarzone())) {
+			e.setCancelled(true);
+			e.getChunk().load();
 		}
 	}
 	
