@@ -1,5 +1,6 @@
 package com.lelann.stand.inventories;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -9,8 +10,10 @@ import org.bukkit.inventory.ItemStack;
 
 import com.lelann.factions.Main;
 import com.lelann.factions.api.FactionPlayer;
+import com.lelann.factions.api.jobs.JobManager;
 import com.lelann.factions.utils.ItemUtils;
 import com.lelann.stand.Requests;
+import com.lelann.stand.events.ItemBoughtEvent;
 import com.lelann.stand.inventories.abstracts.AbstractInventory;
 import com.lelann.stand.inventories.abstracts.ClickableItem;
 import com.lelann.stand.inventories.abstracts.InventoryManager;
@@ -33,6 +36,14 @@ public class BuyGUI extends AbstractInventory {
 	}
 	
 	public double taxe(int price) {
+		if(Main.getInstance().getPlayersManager().getPlayer(viewer.getPlayer()).is("Vendeur")) {
+			boolean bypass = (boolean) JobManager.getJob("Vendeur").getObject(Main.getInstance().getPlayersManager().getPlayer(viewer.getPlayer()), "bypass-taxes");
+			if(bypass) {
+				return 0;
+			} else {
+				return Math.round(((price * TAXE)) * 100) / 100.0;
+			}
+		}
 		return Math.round(((price * TAXE)) * 100) / 100.0;
 	}
 	
@@ -116,15 +127,26 @@ public class BuyGUI extends AbstractInventory {
 			return;
 		}
 		
+		
+		
+		double more = 0.0D;
+		String sellerMore = "";
+		if(Main.getInstance().getPlayersManager().getPlayer(owner.getUniqueId()).is("Vendeur")) {
+			double multiplicator = (double) JobManager.getJob("Vendeur").getObject(Main.getInstance().getPlayersManager().getPlayer(owner.getUniqueId()), "multiplicator");
+			more = ((double) priceOwner * (double) multiplicator) - (double) priceOwner;
+
+			sellerMore = "(&a+ " + more + "$ &7vendeur) ";
+		}
+		
 		viewer.remove(pricePlayer);
-		owner.add(priceOwner);
+		owner.add(priceOwner + (int) more);
 		
 		offer.remove(quantity);
 		if(offer.getAmount() <= 0)
 			owner.removeOffer(offer);
 		
 		if(owner != null) {
-			owner.sendMessage(PREFIX + "Vous venez de vendre &a" + quantity + " " + offer.getName() + "&7 à &a" + viewer.getPlayer().getName() + "&7 pour &a" + priceOwner + "$&7 !");
+			owner.sendMessage(PREFIX + "Vous venez de vendre &a" + quantity + " " + offer.getName() + "&7 à &a" + viewer.getPlayer().getName() + "&7 pour &a" + priceOwner + "$&7 " + sellerMore + "!");
 		}
 		
 		viewer.sendMessage(PREFIX + "Vous venez de d'acheter &a" + quantity + " " + offer.getName() + "&7 à &a" + p.getLastUsername() + "&7 pour &a" + pricePlayer + "$&7 !");
@@ -134,6 +156,8 @@ public class BuyGUI extends AbstractInventory {
 		
 		Requests.savePlayer(viewer);
 		Requests.savePlayer(owner);
+		
+		Bukkit.getServer().getPluginManager().callEvent(new ItemBoughtEvent(viewer, offer, quantity));
 		
 		give(item);
 		goBack();

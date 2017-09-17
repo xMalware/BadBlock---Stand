@@ -30,9 +30,11 @@ import org.bukkit.scheduler.BukkitTask;
 import com.lelann.factions.Main;
 import com.lelann.factions.api.Faction;
 import com.lelann.factions.api.FactionChunk;
+import com.lelann.factions.api.jobs.JobManager;
 import com.lelann.factions.api.managers.ChunksManager;
 import com.lelann.stand.commands.CommandsManager;
 import com.lelann.stand.inventories.abstracts.Categories;
+import com.lelann.stand.job.SellerJob;
 import com.lelann.stand.listeners.APProtector;
 import com.lelann.stand.listeners.ApPNJListener;
 import com.lelann.stand.listeners.ApPNJManager;
@@ -160,6 +162,8 @@ public class StandPlugin extends JavaPlugin {
 				e.printStackTrace();
 			}
 		}*/
+		
+		JobManager.registerJob(SellerJob.class);
 		
 		System.out.println("Loading stands");
 				
