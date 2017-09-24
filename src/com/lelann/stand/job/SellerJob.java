@@ -6,7 +6,7 @@ import com.lelann.factions.api.jobs.Job;
 public class SellerJob extends Job {
 
 	public SellerJob() {
-		super("Vendeur", 4);
+		super("Vendeur", new String[] {"Job quand tu vends masse items"}, 4);
 	}
 
 	@Override

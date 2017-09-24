@@ -19,7 +19,7 @@ public class SellerJobListener extends JobEvent {
 		FactionPlayer p = getPlayersManager().getPlayer(e.getPlayer());
 		if(e.getMessage().contains("vendeur")) {
 			if(!p.is("Vendeur")) {
-				p.assignJob(JobManager.getJob("Vendeur"));
+				p.assignNewJob(JobManager.getJob("Vendeur"));
 			}
 		}
 	}
