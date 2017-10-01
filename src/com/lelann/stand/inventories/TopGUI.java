@@ -228,6 +228,11 @@ public class TopGUI extends AbstractInventory {
 				continue;
 			}
 			
+			if(buying.getAmount() <= 0) {
+				player.sendMessage("&cL'offre " + buying.getName() + " n'est plus disponible !");
+				continue;
+			}
+			
 			StandPlayer owner = buying.getPlayer(buying.getOwner());
 			FactionPlayer p = Main.getInstance().getPlayersManager().getPlayer(buying.getOwner());
 			

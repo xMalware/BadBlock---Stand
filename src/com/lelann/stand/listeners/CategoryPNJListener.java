@@ -76,6 +76,7 @@ public class CategoryPNJListener extends StandObject implements Listener {
 	
 	@EventHandler
 	public void unload(ChunkUnloadEvent e) {
+		if(Main.getInstance().getChunksManager(e.getChunk().getWorld()) == null) return;
 		FactionChunk fc = Main.getInstance().getChunksManager(e.getChunk().getWorld()).getFactionChunk(e.getChunk());
 		if(fc != null && (fc.getOwner().isSafezone() || fc.getOwner().isWarzone())) {
 			e.setCancelled(true);

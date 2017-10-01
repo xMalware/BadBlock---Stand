@@ -163,7 +163,7 @@ public class StandPlugin extends JavaPlugin {
 			}
 		}*/
 		
-		JobManager.registerJob(SellerJob.class);
+		//JobManager.registerJob(SellerJob.class);
 		
 		System.out.println("Loading stands");
 				
