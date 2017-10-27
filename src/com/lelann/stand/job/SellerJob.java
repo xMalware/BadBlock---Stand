@@ -6,7 +6,7 @@ import com.lelann.factions.api.jobs.Job;
 public class SellerJob extends Job {
 
 	public SellerJob() {
-		super("Vendeur", new String[] {"Job quand tu vends masse items"}, 4);
+		super("Vendeur", new String[] {"&7Job quand tu vends masse items"}, 4);
 	}
 
 	@Override
@@ -27,14 +27,14 @@ public class SellerJob extends Job {
 	@Override
 	public void onLevelIncrement(FactionPlayer p) {
 		
-		System.out.println("increment! level: " + p.getJobValues(getName()).getCurrentLevel() + " MAX: " + this.getMaxLevel());
+		System.out.println("increment! level: " + p.getJobValues(getClass()).getCurrentLevel() + " MAX: " + this.getMaxLevel());
 		
-		if(p.getJobValues(getName()).getCurrentLevel() >= this.getMaxLevel()) {
+		if(p.getJobValues(getClass()).getCurrentLevel() >= this.getMaxLevel()) {
 			this.setObject(p, "multiplicator", (double) this.getObject(p, "multiplicator") + 0.1);
 			this.setObject(p, "bypass-taxes", true);
 			p.sendMessage(this.prefix + "Bravo ! Vous avez atteind le niveau maximal qui est le niveau &b" + this.getMaxLevel() + " &7!");
 			p.sendMessage(this.prefix + "Par conséquent, vous ne subissez plus les taxes lors de vos achats dans les stands !");
-		} else if(p.getJobValues(getName()).getCurrentLevel() < this.getMaxLevel()) {
+		} else if(p.getJobValues(getClass()).getCurrentLevel() < this.getMaxLevel()) {
 			this.setObject(p, "multiplicator", (double) this.getObject(p, "multiplicator") + 0.2);
 		}
 		

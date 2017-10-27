@@ -209,6 +209,12 @@ public class TopGUI extends AbstractInventory {
 		
 		StandPlayer player = StandPlugin.get().getPlayer(getPlayer());
 		
+		if(totalMoney < 0) {
+			player.sendMessage("&cOops ! Il y a un problème avec le prix !");
+			player.getPlayer().closeInventory();
+			return;
+		}
+		
 		if(totalMoney > player.getMoney()) {
 			player.sendMessage("&cVous ne disposez pas d'assez d'argent pour effectuer cette commande !");
 			return;

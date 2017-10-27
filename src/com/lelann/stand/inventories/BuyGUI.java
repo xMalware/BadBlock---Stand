@@ -13,10 +13,12 @@ import com.lelann.factions.api.FactionPlayer;
 import com.lelann.factions.api.jobs.JobManager;
 import com.lelann.factions.utils.ItemUtils;
 import com.lelann.stand.Requests;
+import com.lelann.stand.StandPlugin;
 import com.lelann.stand.events.ItemBoughtEvent;
 import com.lelann.stand.inventories.abstracts.AbstractInventory;
 import com.lelann.stand.inventories.abstracts.ClickableItem;
 import com.lelann.stand.inventories.abstracts.InventoryManager;
+import com.lelann.stand.job.SellerJob;
 import com.lelann.stand.objects.StandOffer;
 import com.lelann.stand.objects.StandPlayer;
 
@@ -36,7 +38,7 @@ public class BuyGUI extends AbstractInventory {
 	}
 	
 	public double taxe(int price) {
-		if(Main.getInstance().getPlayersManager().getPlayer(viewer.getPlayer()).is("Vendeur")) {
+		if(Main.getInstance().getPlayersManager().getPlayer(viewer.getPlayer()).is(SellerJob.class)) {
 			boolean bypass = (boolean) JobManager.getJob("Vendeur").getObject(Main.getInstance().getPlayersManager().getPlayer(viewer.getPlayer()), "bypass-taxes");
 			if(bypass) {
 				return 0;
@@ -111,6 +113,12 @@ public class BuyGUI extends AbstractInventory {
 			return;
 		}
 		
+		if(offer.getAmount() <= 0 || !StandPlugin.get().getPlayer(offer.getOwner()).getOffers().contains(offer)) {
+			viewer.sendMessage("&cCet item n'est plus disponible !");
+			viewer.getPlayer().closeInventory();
+			return;
+		}
+		
 		StandPlayer owner = offer.getPlayer(offer.getOwner());
 		FactionPlayer p = Main.getInstance().getPlayersManager().getPlayer(offer.getOwner());
 		
@@ -127,11 +135,15 @@ public class BuyGUI extends AbstractInventory {
 			return;
 		}
 		
-		
+		if(pricePlayer < 0) {
+			viewer.sendMessage("&cOops ! Il y a un problème avec le prix !");
+			viewer.getPlayer().closeInventory();
+			return;
+		}
 		
 		double more = 0.0D;
 		String sellerMore = "";
-		if(Main.getInstance().getPlayersManager().getPlayer(owner.getUniqueId()).is("Vendeur")) {
+		if(Main.getInstance().getPlayersManager().getPlayer(owner.getUniqueId()).is(SellerJob.class)) {
 			double multiplicator = (double) JobManager.getJob("Vendeur").getObject(Main.getInstance().getPlayersManager().getPlayer(owner.getUniqueId()), "multiplicator");
 			more = ((double) priceOwner * (double) multiplicator) - (double) priceOwner;
 

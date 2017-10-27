@@ -115,6 +115,13 @@ public class StandPlayer extends StandObject {
 		toCreate = false;
 	}
 	
+	public void updateUUID(UUID newu) {
+		this.uniqueId = newu;
+		for(StandOffer offer : getOffers()) {
+			offer.setOwner(newu);
+		}
+	}
+	
 	@SuppressWarnings("deprecation")
 	public StandOffer getOffer(ItemStack item){
 		Material type = item.getType();

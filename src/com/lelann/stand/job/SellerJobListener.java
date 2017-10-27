@@ -18,8 +18,8 @@ public class SellerJobListener extends JobEvent {
 	public void onChat(AsyncPlayerChatEvent e) {
 		FactionPlayer p = getPlayersManager().getPlayer(e.getPlayer());
 		if(e.getMessage().contains("vendeur")) {
-			if(!p.is("Vendeur")) {
-				p.assignNewJob(JobManager.getJob("Vendeur"));
+			if(!p.is(SellerJob.class)) {
+				p.assignNewJob(JobManager.getJob(SellerJob.class));
 			}
 		}
 	}
@@ -27,8 +27,8 @@ public class SellerJobListener extends JobEvent {
 	@EventHandler
 	public void onBuy(ItemBoughtEvent e) {
 		FactionPlayer owner = getFactionPlayer(e.getOffer().getOwner());
-		if(owner.is("Vendeur")) {
-			owner.getJobValues("Vendeur").gainXp(2);
+		if(owner.is(SellerJob.class)) {
+			owner.getJobValues(SellerJob.class).gainXp(2);
 		}
 	}
 	
