@@ -30,7 +30,7 @@ import org.bukkit.scheduler.BukkitTask;
 import com.lelann.factions.Main;
 import com.lelann.factions.api.Faction;
 import com.lelann.factions.api.FactionChunk;
-import com.lelann.factions.api.jobs.JobManager;
+import com.lelann.factions.api.jobs.objects.JobManager;
 import com.lelann.factions.api.managers.ChunksManager;
 import com.lelann.stand.commands.CommandsManager;
 import com.lelann.stand.inventories.abstracts.Categories;

@@ -10,7 +10,7 @@ import org.bukkit.inventory.ItemStack;
 
 import com.lelann.factions.Main;
 import com.lelann.factions.api.FactionPlayer;
-import com.lelann.factions.api.jobs.JobManager;
+import com.lelann.factions.api.jobs.objects.JobManager;
 import com.lelann.factions.utils.ItemUtils;
 import com.lelann.stand.Requests;
 import com.lelann.stand.StandPlugin;

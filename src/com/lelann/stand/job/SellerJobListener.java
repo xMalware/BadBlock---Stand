@@ -4,11 +4,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 import com.lelann.factions.api.FactionPlayer;
-import com.lelann.factions.api.jobs.JobEvent;
-import com.lelann.factions.api.jobs.JobManager;
+import com.lelann.factions.api.jobs.objects.JobListener;
+import com.lelann.factions.api.jobs.objects.JobManager;
 import com.lelann.stand.events.ItemBoughtEvent;
 
-public class SellerJobListener extends JobEvent {
+public class SellerJobListener extends JobListener {
 
 	public SellerJobListener() {
 		super(SellerJob.class);

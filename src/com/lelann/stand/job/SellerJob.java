@@ -1,7 +1,7 @@
 package com.lelann.stand.job;
 
 import com.lelann.factions.api.FactionPlayer;
-import com.lelann.factions.api.jobs.Job;
+import com.lelann.factions.api.jobs.objects.Job;
 
 public class SellerJob extends Job {
 
